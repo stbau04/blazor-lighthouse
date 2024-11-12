@@ -1,0 +1,20 @@
+﻿@page "/"
+
+@inherits LighthouseComponentBase
+
+<button @onclick="IncreaseCounter">
+    Increase Counter
+</button>
+
+<div>
+    Counter: @Counter.Get()<br />
+</div>
+
+@code{
+    public Signal<int> Counter { get; } = new(0);
+
+    private void IncreaseCounter()
+    {
+        Counter.Set(Counter.Get() + 1);
+    }
+}
