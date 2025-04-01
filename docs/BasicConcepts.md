@@ -12,7 +12,7 @@ var signal = new Signal<int>(0);
 signal.Set(1);
 
 // Access signal value
-var value = signal.Get();
+int value = signal.Get();
 ```
 
 ## Effects
@@ -41,7 +41,7 @@ var computed = new Computed<int>(() => {
 signal.Set(1);
 
 // Access computed value
-Signal<int> value = computed.Get();
+int value = computed.Get();
 ```
 
 <br/>
