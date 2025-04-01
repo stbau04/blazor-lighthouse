@@ -1,4 +1,4 @@
-# Blazor Lighthouse
+# Blazor Lighthouse #
 *Blazor Lighthouse* provides an API for change detection and therefore allows performing recalculations only when it is actually necessary. The concept is pretty much the same as the signals that are available in [Angular](https://angular.dev/guide/signals).
 
 - **How does this work?** *Blazor Lighthouse* provides a wrapper for values it should be used on
