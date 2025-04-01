@@ -117,7 +117,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
         InvokeAsync(QueueRendering);
     }
 
-    void IRefreshable.Dispose(Signal signal)
+    void IRefreshable.Dispose(SignalBase signal)
     {
         accessTracker.Untrack(signal);
     }
