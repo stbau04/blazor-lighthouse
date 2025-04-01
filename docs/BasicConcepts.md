@@ -1,8 +1,8 @@
 # Basic Concepts of Blazor Lighthouse
-**Signals** and **Effects** are the main building block of *Blazor Lighthouse*. **Signals** provide the value stores which can later be used in **Computed Values** and **Effects**.
+**Signals** and **Effects** are the main building blocks of *Blazor Lighthouse*. **Signals** provide the value stores which can later be used in **Computed Values** and **Effects**.
 
 ## Signals
-**Signals** are simple vale stores. They require an initial value, which can be changed later. Any access inside of an **Effect, Computed Value or Component** leads to an subscription (this behavior can not be nested).
+**Signals** are simple value stores. They require an initial value, which can be changed later. Any access inside of an **Effect, Computed Value or Component** leads to an subscription (this behavior can not be nested).
 
 ```
  // Create signal
@@ -12,7 +12,7 @@ var signal = new Signal<int>(0);
 signal.Set(1);
 
 // Access signal value
-var value = signal.Get();
+int value = signal.Get();
 ```
 
 ## Effects
@@ -29,7 +29,7 @@ signal.Set(1);
 ```
 
 ## Computed Values
-**Computed Values** combine the fuctionality of an **Signal** with the functionality of an **Effect**. It allows the calculation of an value as it would be done with an **Effect** and provides this value as a **Signal** would (but readonly).
+**Computed Values** combine the fuctionality of **Signals** with the functionality of an **Effect**. It allows the calculation of a value as it would be done with an **Effect** and provides this value as a readonly **Signal**.
 
 ```
 // Create computed and calculate value
@@ -41,7 +41,7 @@ var computed = new Computed<int>(() => {
 signal.Set(1);
 
 // Access computed value
-var value = computed.Get();
+int value = computed.Get();
 ```
 
 <br/>
