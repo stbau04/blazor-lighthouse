@@ -5,5 +5,5 @@ namespace BlazorLighthouse.Internal.Interfaces;
 internal interface IRefreshable
 {
     internal void Refresh();
-    internal void Dispose(Signal signal);
+    internal void Dispose(SignalBase signal);
 }

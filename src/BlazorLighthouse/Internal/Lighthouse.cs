@@ -14,7 +14,7 @@ internal static class Lighthouse
         stack.Push(new(refreshable));
     }
 
-    public static void Register(Signal signal)
+    public static void Register(SignalBase signal)
     {
         stack ??= [];
         if (stack.Count == 0)
@@ -25,7 +25,7 @@ internal static class Lighthouse
         signal.RegisterRefreshable(token.Refreshable);
     }
 
-    public static HashSet<Signal> Pop()
+    public static HashSet<SignalBase> Pop()
     {
         stack ??= [];
 
@@ -39,6 +39,6 @@ internal static class Lighthouse
     private class TrackingToken(IRefreshable refreshable)
     {
         public IRefreshable Refreshable { get; } = refreshable;
-        public HashSet<Signal> Signals { get; } = [];
+        public HashSet<SignalBase> Signals { get; } = [];
     }
 }

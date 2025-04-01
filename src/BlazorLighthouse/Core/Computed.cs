@@ -78,7 +78,7 @@ public sealed class Computed<T> : ReadonlySignal<T>, IRefreshable
         signal.Set(EvaluateValueProvider());
     }
 
-    void IRefreshable.Dispose(Signal signal)
+    void IRefreshable.Dispose(SignalBase signal)
     {
         accessTracker.Untrack(signal);
     }

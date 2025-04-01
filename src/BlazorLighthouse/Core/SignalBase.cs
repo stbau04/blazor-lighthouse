@@ -1,0 +1,65 @@
+﻿using BlazorLighthouse.Internal.Interfaces;
+
+namespace BlazorLighthouse.Core;
+
+/// <summary>
+/// Base class for all types of signals
+/// </summary>
+public abstract class SignalBase : IContextDisposable
+{
+    /// <summary>
+    /// Signaling context for the current signal
+    /// </summary>
+    protected readonly SignalingContext context;
+
+    private HashSet<IRefreshable> refreshables = [];
+
+    internal SignalBase(SignalingContext context)
+    {
+        this.context = context;
+        context?.RegisterContextDisposable(this);
+    }
+
+    /// <summary>
+    /// Notify the signaling system that the value has chagned
+    /// </summary>
+    internal protected void ValueHasChanged()
+    {
+        var currentRefreshables = refreshables;
+        refreshables = [];
+
+        Refresh(currentRefreshables);
+    }
+
+    internal void RegisterRefreshable(IRefreshable refreshable)
+    {
+        lock (context.LockObject)
+        {
+            RegisterRefreshableSynchronized(refreshable);
+        }
+    }
+
+    internal void UnregisterRefreshable(IRefreshable refreshable)
+    {
+        refreshables.Remove(refreshable);
+    }
+    
+    private void RegisterRefreshableSynchronized(IRefreshable refreshable)
+    {
+        context.AssertIsNotDisposed();
+        refreshables.Add(refreshable);
+    }
+
+    void IContextDisposable.Dispose()
+    {
+        refreshables.Clear();
+        foreach (var refreshable in refreshables)
+            refreshable.Dispose(this);
+    }
+
+    private static void Refresh(ISet<IRefreshable> refreshables)
+    {
+        foreach (var refreshable in refreshables)
+            refreshable.Refresh();
+    }
+}
