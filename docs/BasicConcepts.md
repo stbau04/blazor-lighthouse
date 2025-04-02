@@ -24,7 +24,7 @@ signal.Set(1);
 int value = signal.Get();
 ```
 
-# Key Features:
+### Key Features:
 - Type-safe value storage
 - Change detection (won't notify if value hasn't changed)
 - Batch updates (multiple sets only trigger one notification)
@@ -33,7 +33,7 @@ int value = signal.Get();
 ## Effects
 **Effects** are simple subscribers. They accept a callback performing an arbitrary action. Initially, the action is run when the the effect is initialized. Afterwards whenever an accessed **Signal** value changes the **Effect** is rerun.
 
-# Common Use Cases:
+### Common Use Cases:
 - Console logging
 - DOM manipulation
 - API calls
@@ -52,7 +52,7 @@ signal.Set(1);
 ## Computed Values
 **Computed Values** combine the fuctionality of **Signals** with the functionality of an **Effect**. It allows the calculation of a value as it would be done with an **Effect** and provides this value as a readonly **Signal**.
 
-# Characteristics:
+### Characteristics:
 - Lazy evaluation (only compute when needed)
 - Memoization (cache results until dependencies change)
 - Automatic dependency tracking
@@ -71,13 +71,13 @@ signal.Set(1);
 int value = computed.Get();
 ```
 
-# When to Use Blazor Lighthouse
+## When to Use Blazor Lighthouse
 - Your application has complex state relationships
 - You need fine-grained reactivity for performance
 - You want to minimize unnecessary re-renders
 - You need to share state across components
 
-# How to Use Blazor Lighthouse in Blazor Components?
+## How to Use Blazor Lighthouse in Blazor Components?
 Go to UsageWithBlazor.md
 
 <br/>
