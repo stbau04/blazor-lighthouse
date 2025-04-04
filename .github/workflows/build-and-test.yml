@@ -15,10 +15,10 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-    - run: cd src
-    - name: Restore dependencies
-      run: dotnet restore BlazorLighthouse.sln
-    - name: Build
-      run: dotnet build --no-restore BlazorLighthouse.sln
-    - name: Test
-      run: dotnet test --no-build --verbosity normal BlazorLighthouse.sln
+    - name: Restore, Build and Test
+      working-directory: ./src
+      run: |
+        dotnet restore
+        dotnet build --no-restore
+        dotnet test --no-build
+
