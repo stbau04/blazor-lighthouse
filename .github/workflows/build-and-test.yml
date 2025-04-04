@@ -14,11 +14,10 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
     - name: Restore, Build and Test
       working-directory: ./src
       run: |
         dotnet restore
         dotnet build --no-restore
         dotnet test --no-build
-
