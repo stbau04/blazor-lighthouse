@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-	<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-	<OutputType>library</OutputType>
+	  <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+	  <OutputType>library</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<WarningsAsErrors>nullable</WarningsAsErrors>
-	<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <WarningsAsErrors>nullable</WarningsAsErrors>
+	  <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,15 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-	<TargetFrameworks>net8.0</TargetFrameworks>
-	<ImplicitUsings>enable</ImplicitUsings>
-	<Nullable>enable</Nullable>
-	<WarningsAsErrors>nullable</WarningsAsErrors>
-	<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BlazorLighthouse\BlazorLighthouse.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\Stephan\Documents\Projekte\blazor-lighthouse\src\BlazorLighthouseTest\.editorconfig" />
   </ItemGroup>
 
 </Project>
