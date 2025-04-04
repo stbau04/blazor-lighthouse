@@ -17,8 +17,8 @@ jobs:
         dotnet-version: 8.0.x
     - run: cd src
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore BlazorLighthouse.sln
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore BlazorLighthouse.sln
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --verbosity normal BlazorLighthouse.sln
