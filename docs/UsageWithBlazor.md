@@ -26,14 +26,15 @@ To leverage automatic updates in a Blazor component, inherit from LighthouseComp
 ```
 
 ## How It Works
-- LighthouseComponentBase inherits from SignalingContext, ensuring proper disposal of signals.
-- When Value.Set() is called, the component automatically re-renders.
-- No need for StateHasChanged()—Lighthouse detects the update.
+- LighthouseComponentBase inherits from SignalingContext, providing a mechanism to bind the lifespan of a Signal to the lifespan of a Component, helping manage the disposal of signals.
+- When Value.Set() is called, the component automatically re-renders if the signal's value is used during rendering. This ensures that only components dependent on the signal are updated.
+- No need for StateHasChanged() - Lighthouse detects the update.
+
 
 ## Key Benefits of Using LighthouseComponentBase
-- Automatic Subscription Tracking – Any accessed signal inside @code or the Razor template automatically triggers reactivity.
+- Automatic Subscription Tracking – Any signal accessed inside the Razor template automatically triggers reactivity and re-rendering. Signals accessed in the @code block will not trigger reactivity.
 - Efficient Updates – Only re-renders when needed, reducing unnecessary UI updates.
-- Memory Safety – The component manages its own signals, preventing memory leaks.
+- Memory Safety – The developer must explicitly use the component as the context parameter when creating signals (e.g., new Signal(this, 0)) to ensure proper signal disposal and prevent memory leaks.
 
 <br/>
 <p align="center">

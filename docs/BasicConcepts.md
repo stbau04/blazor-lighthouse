@@ -1,6 +1,9 @@
 # Basic Concepts of Blazor Lighthouse
+Blazor Lighthouse is a lightweight, high-performance state management library for Blazor applications that implements the signals pattern. While the term "signals pattern" may not be a widely recognized design pattern, it is conceptually similar to reactive programming and observable patterns. These paradigms are commonly used in frameworks like ReactiveX or SolidJS, where reactive primitives (like signals) are used to manage state and reactivity.
 
-Blazor Lighthouse is a lightweight, high-performance state management library for Blazor applications that implements the signals pattern. It provides reactive primitives that automatically track dependencies and update consumers when values change.
+For more information on reactive programming concepts, pleaser refer to:
+- [Reactive Programming Overview](https://en.wikipedia.org/wiki/Reactive_programming)
+- [Signals in SolidJS](https://www.solidjs.com/docs/latest#signals)
 
 **Signals** and **Effects** are the main building blocks of *Blazor Lighthouse*. **Signals** provide the value stores which can later be used in **Computed Values** and **Effects**.
 
@@ -9,9 +12,10 @@ Blazor Lighthouse is a lightweight, high-performance state management library fo
 
 Signals are the foundation of Blazor Lighthouse's reactivity system. They:
 - Store mutable state
-- Track their dependencies automatically
-- Notify dependents when values change
-- Are thread-safe for concurrent access
+- Automatically notify their dependents (e.g., components or computations) when their value changes
+
+## What Are Dependents?
+In this context, dependents are the components, UI elements, or reactive computations that rely on the value of a signal. When a signal's value changes, all its dependents are automatically updated to reflect the new state. This ensures that the UI stays in sync with the underlying data without requiring manual updates.
 
 ```
  // Create signal
