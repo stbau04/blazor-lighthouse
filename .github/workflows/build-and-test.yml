@@ -32,5 +32,5 @@ jobs:
       with:
         filename: "Cobertura.xml"
         fail_below_min: true 
-        thresholds: "0 0"
+        thresholds: "100 100"
 
