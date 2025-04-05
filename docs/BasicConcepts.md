@@ -6,7 +6,7 @@
 
 ```
  // Create signal
-var signal = new Signal<int>(0);
+Signal<int> signal = new Signal<int>(0);
 
 // Set signal value
 signal.Set(1);
@@ -33,7 +33,7 @@ signal.Set(1);
 
 ```
 // Create computed and calculate value
-var computed = new Computed<int>(() => {
+Computed<int> computed = new Computed<int>(() => {
     return signal.Get() * signal.Get();
 });
 
