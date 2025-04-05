@@ -10,14 +10,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Check out the code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
-    - name: Restore, Build and Test
+    - name: Run Tests
       working-directory: ./src
-      run: |
-        dotnet restore
-        dotnet build --no-restore
-        dotnet test --no-build
+      run: dotnet test --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+    - name: Combine Code Coverage Reports
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.2.4
+      with:
+        reports: "**/*.cobertura.xml"
+        targetdir: "${{ github.workspace }}"
+        reporttypes: "Cobertura"
+    - name: Publish Code Coverage Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: "Cobertura.xml"
+        fail_below_min: true 
+        thresholds: "0 0"
+
