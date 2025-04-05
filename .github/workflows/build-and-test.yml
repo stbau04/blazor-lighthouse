@@ -13,7 +13,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0    
+        fetch-depth: 0
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -25,5 +25,5 @@ jobs:
       uses: irongut/CodeCoverageSummary@v1.3.0
       with:
         filename: "**/*Cobertura.xml"
-        fail_below_min: false 
+        fail_below_min: true 
         thresholds: "100 100"

@@ -39,7 +39,7 @@ internal class AccessTracker : IContextDisposable
     {
         lock (context.LockObject)
         {
-            UntrackSyncrhonized(signal);
+            UntrackSynchronized(signal);
         }
     }
 
@@ -66,7 +66,7 @@ internal class AccessTracker : IContextDisposable
         return value;
     }
 
-    private void UntrackSyncrhonized(SignalBase signal)
+    private void UntrackSynchronized(SignalBase signal)
     {
         signals.Remove(signal);
     }

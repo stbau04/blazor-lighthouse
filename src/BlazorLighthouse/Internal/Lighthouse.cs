@@ -27,10 +27,8 @@ internal static class Lighthouse
 
     public static HashSet<SignalBase> Pop()
     {
-        stack ??= [];
-
         var token = new TrackingToken(null!);
-        if (stack.Count != 0)
+        if (stack!.Count != 0)
             token = stack.Pop();
             
         return token.Signals;
