@@ -21,16 +21,10 @@ jobs:
     - name: Run Tests
       working-directory: ./src
       run: dotnet test --verbosity normal --logger trx --collect:"XPlat Code Coverage"
-    - name: Combine Code Coverage Reports
-      uses: danielpalme/ReportGenerator-GitHub-Action@5.2.4
-      with:
-        reports: "**/*.cobertura.xml"
-        targetdir: "${{ github.workspace }}"
-        reporttypes: "Cobertura"
-    - name: Publish Code Coverage Report
+    - name: Verify Code Coverage
       uses: irongut/CodeCoverageSummary@v1.3.0
       with:
-        filename: "Cobertura.xml"
+        filename: "**/*Cobertura.xml"
         fail_below_min: true 
         thresholds: "100 100"
 
