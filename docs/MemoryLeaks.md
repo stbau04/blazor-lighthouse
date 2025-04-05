@@ -8,10 +8,10 @@ The signaling context is a disposable resouce that can be passed to a **Signal, 
 
 ```
 // Create signaling context
-var context = new SignalingContext();
+SignalingContext context = new SignalingContext();
 
 // Create signal within context
-var signal = new Signal<int>(context, 0);
+Signal<int> signal = new Signal<int>(context, 0);
 
 // Create effect within context
 _ = new Effect(context, () => {
@@ -19,7 +19,7 @@ _ = new Effect(context, () => {
 });
 
 // Create computed value within context
-var computed = new Computed<int>(context, () => {
+Computed<int> computed = new Computed<int>(context, () => {
     return signal.Get() * signal.Get();
 }); 
 
