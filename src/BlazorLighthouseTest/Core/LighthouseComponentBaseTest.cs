@@ -480,6 +480,96 @@ public partial class LighthouseComponentBaseTest
             await rendererFake.Dispatcher.InvokeAsync(
                 component.ExecuteStateHasChanged));
     }
+    
+    [Fact]
+    public async Task TestReferencedSignalDisposed()
+    {
+        var context = new SignalingContext();
+
+        var signal = new Signal<int>(context, 1);
+        var siganlValue = 0;
+
+        var buildRenderTree = new Mock<Action>();
+        var component = new TestComponent(() =>
+        {
+            siganlValue = signal.Get();
+            buildRenderTree.Object.Invoke();
+        });
+
+        var rendererFake = RendererFake.Create();
+        rendererFake.Attach(component);
+
+        await rendererFake.Dispatcher.InvokeAsync(
+            component.ExecuteStateHasChanged);
+
+        buildRenderTree.Invocations.Clear();
+
+        // act
+        context.Dispose();
+
+        // assert
+        // TODO
+    }
+
+    [Fact]
+    public async Task Test()
+    {
+        // arrange
+        var value = 0;
+
+        var signal1 = new Signal<int>(1);
+        var signal2 = new Signal<int>(2);
+        var signal3 = new Signal<int>(2);
+        var tcs = new TaskCompletionSource();
+        var tc2 = new TaskCompletionSource();
+
+        tcs.SetResult();
+
+        var context = new SignalingContext();
+
+        var buildRenderTree = new Mock<Action>();
+        var component = new TestComponent(() =>
+        {
+            buildRenderTree.Object.Invoke();
+            signal1.Get();
+            signal2.Get();
+            signal3.Get();
+            tc2?.SetResult();
+            tcs.Task.Wait();
+            value = signal3.Get();
+        });
+
+        var rendererFake = RendererFake.Create();
+        rendererFake.Attach(component);
+
+        await rendererFake.Dispatcher.InvokeAsync(
+            component.ExecuteStateHasChanged);
+
+        buildRenderTree.Invocations.Clear();
+
+        // act
+
+        tcs = new TaskCompletionSource();
+
+        tc2 = new();
+        var t1 = Task.Run(() => signal1.Set(2));
+        await tc2.Task;
+
+        var t2 = Task.Run(() => signal2.Set(3));
+        while (!component!.IsRenderingQueued)
+            ;
+
+        signal3.Set(4);
+
+        tc2 = null;
+        tcs.SetResult();
+        await t1;
+        await t2;
+
+        // assert
+        buildRenderTree.Verify(obj => obj(), Times.Exactly(2));
+        Assert.Equal(4, value);
+    }
 
     internal class TestComponent(Action buildRenderTree) : LighthouseComponentBase
     {
@@ -498,6 +588,7 @@ public partial class LighthouseComponentBaseTest
 
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
+            base.BuildRenderTree(builder);
             buildRenderTree();
         }
     }

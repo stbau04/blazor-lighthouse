@@ -12,7 +12,7 @@ public sealed class Effect : IRefreshable
     private readonly AccessTracker accessTracker;
     private readonly object lockObject = new();
 
-    private bool isRunningQueued = false;
+    internal bool IsRunQueued { get; private set; } = false;
 
     /// <summary>
     /// Instantiate a new effect that belongs to no context
@@ -39,7 +39,7 @@ public sealed class Effect : IRefreshable
     private void RunCallback()
     {
         accessTracker.Track(() => {
-            isRunningQueued = false;
+            IsRunQueued = false;
             callback();
         });
     }
@@ -54,10 +54,10 @@ public sealed class Effect : IRefreshable
 
     private bool SetRunningQueuedSync()
     {
-        if (isRunningQueued)
+        if (IsRunQueued)
             return false;
 
-        isRunningQueued = true;
+        IsRunQueued = true;
         return true;
     }
 

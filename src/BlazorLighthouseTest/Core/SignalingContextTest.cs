@@ -54,6 +54,56 @@ public class SignalingContextTest
     }
 
     [Fact]
+    public void TestSignalInUse_ContextDisposed()
+    {
+        // arrange
+        var recalculationCount = 0;
+
+        var signalingContext = new SignalingContext();
+        var signal = new Signal<int>(signalingContext, 1);
+        var computed = new Computed<int>(() =>
+        {
+            recalculationCount++;
+            return signal.Get();
+        });
+
+        // act
+        signalingContext.Dispose();
+
+        // assert
+        Assert.Throws<InvalidOperationException>(
+            () => signal.Set(2));
+
+        Assert.Equal(1, recalculationCount);
+        Assert.Equal(1, computed.Get());
+    }
+    
+    [Fact]
+    public void TestSignalInUseByEffect_ContextDisposed()
+    {
+        // arrange
+        var recalculationCount = 0;
+        var value = 0;
+
+        var signalingContext = new SignalingContext();
+        var signal = new Signal<int>(signalingContext, 1);
+        _ = new Effect(() =>
+        {
+            recalculationCount++;
+            value = signal.Get();
+        });
+
+        // act
+        signalingContext.Dispose();
+
+        // assert
+        Assert.Throws<InvalidOperationException>(
+            () => signal.Set(2));
+
+        Assert.Equal(1, recalculationCount);
+    }
+
+    [Fact]
     public void TestComputed()
     {
         // arrange
@@ -74,7 +124,7 @@ public class SignalingContextTest
         Assert.Equal(2, recalculationCount);
         Assert.Equal(2, computed.Get());
     }
-
+    
     [Fact]
     public void TestComputed_ContextDisposed()
     {
@@ -97,6 +147,30 @@ public class SignalingContextTest
         Assert.Equal(1, recalculationCount);
         Assert.Throws<InvalidOperationException>(
             () => computed.Get());
+    }
+    
+    [Fact]
+    public void TestComputedInUse_ContextDisposed()
+    {
+        // arrange
+        var recalculationCount = 0;
+
+        var signalingContext = new SignalingContext();
+        var signal = new Signal<int>(1);
+        var computed1 = new Computed<int>(signalingContext, signal.Get);
+        var computed2 = new Computed<int>(() =>
+        {
+            recalculationCount++;
+            return computed1.Get();
+        });
+
+        // act
+        signalingContext.Dispose();
+        signal.Set(2);
+
+        // assert
+        Assert.Equal(1, recalculationCount);
+        Assert.Equal(1, computed2.Get());
     }
 
     [Fact]
