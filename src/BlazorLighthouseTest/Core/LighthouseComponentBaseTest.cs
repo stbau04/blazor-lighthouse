@@ -522,6 +522,7 @@ public partial class LighthouseComponentBaseTest
         var signal3 = new Signal<int>(2);
         var tcs = new TaskCompletionSource();
         var tc2 = new TaskCompletionSource();
+        var fc = 0;
 
         tcs.SetResult();
 
@@ -536,6 +537,7 @@ public partial class LighthouseComponentBaseTest
             signal3.Get();
             tc2?.SetResult();
             tcs.Task.Wait();
+            fc++;
             value = signal3.Get();
         });
 
@@ -565,6 +567,9 @@ public partial class LighthouseComponentBaseTest
         tcs.SetResult();
         await t1;
         await t2;
+
+        while (fc < 3)
+            ;
 
         // assert
         buildRenderTree.Verify(obj => obj(), Times.Exactly(2));
