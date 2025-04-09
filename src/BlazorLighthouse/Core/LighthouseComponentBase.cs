@@ -16,7 +16,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
 
     private RenderHandle renderHandle;
 
-    private bool isRenderingQueued = false;
+    internal bool IsRenderingQueued { get; private set; } = false;
 
     /// <summary>
     /// Instantiate a new lighthouse base component
@@ -82,7 +82,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     {
         accessTracker.Track(() =>
         {
-            isRenderingQueued = false;
+            IsRenderingQueued = false;
             BuildRenderTree(builder);
         });
     }
@@ -97,10 +97,10 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
 
     private bool SetRenderingQueuedSync()
     {
-        if (isRenderingQueued)
+        if (IsRenderingQueued)
             return false;
 
-        isRenderingQueued = true;
+        IsRenderingQueued = true;
         return true;
     }
 

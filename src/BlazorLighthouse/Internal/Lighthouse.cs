@@ -1,5 +1,6 @@
 ﻿using BlazorLighthouse.Core;
 using BlazorLighthouse.Internal.Interfaces;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BlazorLighthouse.Internal;
 
@@ -10,13 +11,13 @@ internal static class Lighthouse
 
     public static void Push(IRefreshable refreshable)
     {
-        stack ??= [];
+        InitializeThreadStatic();
         stack.Push(new(refreshable));
     }
 
     public static void Register(SignalBase signal)
     {
-        stack ??= [];
+        InitializeThreadStatic();
         if (stack.Count == 0)
             return;
 
@@ -27,13 +28,19 @@ internal static class Lighthouse
 
     public static HashSet<SignalBase> Pop()
     {
-        stack ??= [];
+        InitializeThreadStatic();
 
-        var token = new TrackingToken(null!);
+        var token = new TrackingToken(IRefreshable.Default);
         if (stack.Count != 0)
             token = stack.Pop();
-            
+
         return token.Signals;
+    }
+
+    [MemberNotNull(nameof(stack))]
+    private static void InitializeThreadStatic()
+    {
+        stack ??= [];
     }
 
     private class TrackingToken(IRefreshable refreshable)

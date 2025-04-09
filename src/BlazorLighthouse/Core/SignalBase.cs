@@ -17,7 +17,7 @@ public abstract class SignalBase : IContextDisposable
     internal SignalBase(SignalingContext context)
     {
         this.context = context;
-        context?.RegisterContextDisposable(this);
+        context.RegisterContextDisposable(this);
     }
 
     /// <summary>
@@ -52,10 +52,11 @@ public abstract class SignalBase : IContextDisposable
 
     void IContextDisposable.Dispose()
     {
-        refreshables.Clear();
         foreach (var refreshable in refreshables)
             refreshable.Dispose(this);
-    }
+
+        refreshables.Clear();
+    } 
 
     private static void Refresh(ISet<IRefreshable> refreshables)
     {

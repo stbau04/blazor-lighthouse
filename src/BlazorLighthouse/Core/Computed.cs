@@ -14,7 +14,7 @@ public sealed class Computed<T> : ReadonlySignal<T>, IRefreshable
     private readonly Signal<T> signal;
     private readonly object lockObject = new();
 
-    private bool isEvaluationQueued = false;
+    internal bool IsEvaluationQueued { get; private set; } = false;
 
     /// <summary>
     /// Instantiate a new computed value that belongs to no context
@@ -48,7 +48,7 @@ public sealed class Computed<T> : ReadonlySignal<T>, IRefreshable
     private T EvaluateValueProvider()
     {
         return accessTracker.Track(() => {
-            isEvaluationQueued = false;
+            IsEvaluationQueued = false;
             return valueProvider();
         });
     }
@@ -57,16 +57,16 @@ public sealed class Computed<T> : ReadonlySignal<T>, IRefreshable
     {
         lock (lockObject)
         {
-            return SetRenderingQueuedSync();
+            return SetEvaluationQueuedSync();
         }
     }
 
-    private bool SetRenderingQueuedSync()
+    private bool SetEvaluationQueuedSync()
     {
-        if (isEvaluationQueued)
+        if (IsEvaluationQueued)
             return false;
 
-        isEvaluationQueued = true;
+        IsEvaluationQueued = true;
         return true;
     }
 
