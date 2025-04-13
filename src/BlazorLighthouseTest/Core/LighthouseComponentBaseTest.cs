@@ -159,6 +159,7 @@ public partial class LighthouseComponentBaseTest
 
         await rendererFake.Dispatcher.InvokeAsync(
             innerComponent.ExecuteStateHasChanged);
+
         innerBuildRenderTree.Invocations.Clear();
 
         // act
@@ -517,7 +518,7 @@ public partial class LighthouseComponentBaseTest
     }
 
     [Fact]
-    public async Task TestMultipleSignalChanges()
+    public async Task TestMultipleSignalChangesAtOnce()
     {
         // arrange
         var recalculationCount = 0;

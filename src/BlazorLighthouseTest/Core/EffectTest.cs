@@ -240,7 +240,7 @@ public class EffectTest
     }
 
     [Fact]
-    public async Task TestMultipleSignalChanges()
+    public async Task TestMultipleSignalChangesAtOnce()
     {
         // arrange
         var recalculationCount = 0;

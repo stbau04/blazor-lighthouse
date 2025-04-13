@@ -125,7 +125,6 @@ public class SignalingContextTest
         Assert.Equal(2, recalculationCount);
         Assert.Equal(2, computed.Get());
     }
-   
 
     [Fact]
     public void TestComputed_ContextDisposed()
