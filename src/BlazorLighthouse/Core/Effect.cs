@@ -48,11 +48,11 @@ public sealed class Effect : IRefreshable
     {
         lock (lockObject)
         {
-            return SetRunningQueuedSync();
+            return SetRunQueued();
         }
     }
 
-    private bool SetRunningQueuedSync()
+    private bool SetRunQueued()
     {
         if (IsRunQueued)
             return false;

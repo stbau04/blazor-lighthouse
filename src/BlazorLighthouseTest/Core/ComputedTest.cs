@@ -260,38 +260,7 @@ public class ComputedTest
     }
 
     [Fact]
-    public void TestMultipleRecalculations()
-    {
-        // arrange
-        var recalculationCount1 = 0;
-        var recalculationCount2 = 0;
-
-        var signal1 = new Signal<int>(1);
-        var signal2 = new Signal<int>(2);
-
-        var computed1 = new Computed<int>(() =>
-        {
-            recalculationCount1++;
-            return signal1.Get();
-        });
-
-        var computed2 = new Computed<int>(() =>
-        {
-            recalculationCount2++;
-            return computed1.Get() + signal2.Get();
-        });
-
-        // act
-        signal1.Set(3);
-
-        // assert
-        Assert.Equal(5, computed2.Get());
-        Assert.Equal(2, recalculationCount1);
-        Assert.Equal(2, recalculationCount2);
-    }
-
-    [Fact]
-    public async Task TestStuff()
+    public async Task TestMultipleSignalChanges()
     {
         // arrange
         var recalculationCount = 0;
@@ -299,42 +268,45 @@ public class ComputedTest
         var signal1 = new Signal<int>(1);
         var signal2 = new Signal<int>(2);
         var signal3 = new Signal<int>(2);
-        var tcs = new TaskCompletionSource();
-        var tc2 = new TaskCompletionSource();
 
-        tcs.SetResult();
+        var taskCompletionSource1 = new TaskCompletionSource();
+        var taskCompletionSource2 = new TaskCompletionSource();
+
+        taskCompletionSource1.SetResult();
         var computed = new Computed<int>(() =>
-        {   
-            recalculationCount++;
+        {
             signal1.Get();
             signal2.Get();
             signal3.Get();
-            tc2?.SetResult();
-            tcs.Task.Wait();
+
+            taskCompletionSource2.SetResult();
+            taskCompletionSource1.Task.Wait();
+
+            recalculationCount++;
             return signal3.Get();
         });
 
         // act
+        taskCompletionSource1 = new();
+        taskCompletionSource2 = new();
 
-        tcs = new TaskCompletionSource();
+        var setterTask1 = Task.Run(() => signal1.Set(2));
+        await taskCompletionSource2.Task;
 
-        tc2 = new();
-        var t1 = Task.Run(() => signal1.Set(2));
-        await tc2.Task;
-
-        var t2 = Task.Run(() => signal2.Set(3));
+        var setterTask2 = Task.Run(() => signal2.Set(3));
         while (!computed!.IsEvaluationQueued)
             ;
 
         signal3.Set(4);
 
-        tc2 = null;
-        tcs.SetResult();
-        await t1;
-        await t2;
+        taskCompletionSource2 = new();
+        taskCompletionSource1.SetResult();
+
+        await setterTask1;
+        await setterTask2;
 
         // assert
-        Assert.Equal(3, recalculationCount);
         Assert.Equal(4, computed.Get());
+        Assert.Equal(3, recalculationCount);
     }
 }

@@ -7,40 +7,40 @@ namespace BlazorLighthouse.Internal;
 internal static class Lighthouse
 {
     [ThreadStatic]
-    private static Stack<TrackingToken>? stack;
+    private static Stack<TrackingToken>? trackingTokens;
 
     public static void Push(IRefreshable refreshable)
     {
-        InitializeThreadStatic();
-        stack.Push(new(refreshable));
+        InitializeTrackingTokens();
+        trackingTokens.Push(new(refreshable));
     }
 
     public static void Register(SignalBase signal)
     {
-        InitializeThreadStatic();
-        if (stack.Count == 0)
+        InitializeTrackingTokens();
+        if (trackingTokens.Count == 0)
             return;
 
-        var token = stack.Peek();
+        var token = trackingTokens.Peek();
         token.Signals.Add(signal);
         signal.RegisterRefreshable(token.Refreshable);
     }
 
     public static HashSet<SignalBase> Pop()
     {
-        InitializeThreadStatic();
+        InitializeTrackingTokens();
 
-        var token = new TrackingToken(IRefreshable.Default);
-        if (stack.Count != 0)
-            token = stack.Pop();
+        var token = new TrackingToken(IRefreshable.None);
+        if (trackingTokens.Count != 0)
+            token = trackingTokens.Pop();
 
         return token.Signals;
     }
 
-    [MemberNotNull(nameof(stack))]
-    private static void InitializeThreadStatic()
+    [MemberNotNull(nameof(trackingTokens))]
+    private static void InitializeTrackingTokens()
     {
-        stack ??= [];
+        trackingTokens ??= [];
     }
 
     private class TrackingToken(IRefreshable refreshable)

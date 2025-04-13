@@ -54,7 +54,7 @@ public class SignalingContextTest
     }
 
     [Fact]
-    public void TestSignalInUse_ContextDisposed()
+    public void TestSignalInUseByComputed_ContextDisposed()
     {
         // arrange
         var recalculationCount = 0;
@@ -74,8 +74,8 @@ public class SignalingContextTest
         Assert.Throws<InvalidOperationException>(
             () => signal.Set(2));
 
-        Assert.Equal(1, recalculationCount);
         Assert.Equal(1, computed.Get());
+        Assert.Equal(1, recalculationCount);
     }
     
     [Fact]
@@ -100,6 +100,7 @@ public class SignalingContextTest
         Assert.Throws<InvalidOperationException>(
             () => signal.Set(2));
 
+        Assert.Equal(1, value);
         Assert.Equal(1, recalculationCount);
     }
 
@@ -124,7 +125,8 @@ public class SignalingContextTest
         Assert.Equal(2, recalculationCount);
         Assert.Equal(2, computed.Get());
     }
-    
+   
+
     [Fact]
     public void TestComputed_ContextDisposed()
     {
@@ -150,7 +152,7 @@ public class SignalingContextTest
     }
     
     [Fact]
-    public void TestComputedInUse_ContextDisposed()
+    public void TestComputedInUseByComputed_ContextDisposed()
     {
         // arrange
         var recalculationCount = 0;
@@ -171,6 +173,31 @@ public class SignalingContextTest
         // assert
         Assert.Equal(1, recalculationCount);
         Assert.Equal(1, computed2.Get());
+    }
+    
+    [Fact]
+    public void TestComputedInUseByEffect_ContextDisposed()
+    {
+        // arrange
+        var recalculationCount = 0;
+        var value = 0;
+
+        var signalingContext = new SignalingContext();
+        var signal = new Signal<int>(1);
+        var computed = new Computed<int>(signalingContext, signal.Get);
+        var effect = new Effect(signalingContext, () =>
+        {
+            recalculationCount++;
+            value = computed.Get();
+        });
+
+        // act
+        signalingContext.Dispose();
+        signal.Set(2);
+
+        // assert
+        Assert.Equal(1, value);
+        Assert.Equal(1, recalculationCount);
     }
 
     [Fact]

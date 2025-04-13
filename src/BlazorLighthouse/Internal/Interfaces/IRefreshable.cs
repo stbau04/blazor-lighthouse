@@ -5,13 +5,13 @@ namespace BlazorLighthouse.Internal.Interfaces;
 
 internal interface IRefreshable
 {
-    public static IRefreshable Default { get; } = new DefaultRefreshable();
+    public static IRefreshable None { get; } = new EmptyRefreshable();
 
     internal void Refresh();
     internal void Dispose(SignalBase signal);
 
     [ExcludeFromCodeCoverage]
-    public class DefaultRefreshable : IRefreshable
+    public class EmptyRefreshable : IRefreshable
     {
         void IRefreshable.Dispose(SignalBase signal)
         {
