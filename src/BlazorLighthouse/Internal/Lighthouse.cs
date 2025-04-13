@@ -21,20 +21,20 @@ internal static class Lighthouse
         if (trackingTokens.Count == 0)
             return;
 
-        var token = trackingTokens.Peek();
-        token.Signals.Add(signal);
-        signal.RegisterRefreshable(token.Refreshable);
+        var trackingToken = trackingTokens.Peek();
+        trackingToken.Signals.Add(signal);
+        signal.RegisterRefreshable(trackingToken.Refreshable);
     }
 
     public static HashSet<SignalBase> Pop()
     {
         InitializeTrackingTokens();
 
-        var token = new TrackingToken(IRefreshable.None);
+        var trackingToken = new TrackingToken(IRefreshable.None);
         if (trackingTokens.Count != 0)
-            token = trackingTokens.Pop();
+            trackingToken = trackingTokens.Pop();
 
-        return token.Signals;
+        return trackingToken.Signals;
     }
 
     [MemberNotNull(nameof(trackingTokens))]
