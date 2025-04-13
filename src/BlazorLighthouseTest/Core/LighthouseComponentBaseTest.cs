@@ -159,6 +159,7 @@ public partial class LighthouseComponentBaseTest
 
         await rendererFake.Dispatcher.InvokeAsync(
             innerComponent.ExecuteStateHasChanged);
+
         innerBuildRenderTree.Invocations.Clear();
 
         // act
@@ -435,6 +436,7 @@ public partial class LighthouseComponentBaseTest
 
         await rendererFake.Dispatcher.InvokeAsync(
             innerComponent.ExecuteStateHasChanged);
+
         innerBuildRenderTree.Invocations.Clear();
 
         // act
@@ -480,6 +482,108 @@ public partial class LighthouseComponentBaseTest
             await rendererFake.Dispatcher.InvokeAsync(
                 component.ExecuteStateHasChanged));
     }
+    
+    [Fact]
+    public async Task TestReferencedSignalDisposed()
+    {
+        var context = new SignalingContext();
+
+        var signal = new Signal<int>(context, 1);
+        var siganlValue = 0;
+
+        var buildRenderTree = new Mock<Action>();
+        var component = new TestComponent(() =>
+        {
+            siganlValue = signal.Get();
+            buildRenderTree.Object.Invoke();
+        });
+
+        var rendererFake = RendererFake.Create();
+        rendererFake.Attach(component);
+
+        await rendererFake.Dispatcher.InvokeAsync(
+            component.ExecuteStateHasChanged);
+
+        buildRenderTree.Invocations.Clear();
+
+        // act
+        context.Dispose();
+
+        // assert
+        Assert.Throws<InvalidOperationException>(
+            () => signal.Set(2));
+
+        Assert.Equal(1, siganlValue);
+        buildRenderTree.Verify(obj => obj(), Times.Never);
+    }
+
+    [Fact]
+    public async Task TestMultipleSignalChangesAtOnce()
+    {
+        // arrange
+        var recalculationCount = 0;
+        var value = 0;
+
+        var signal1 = new Signal<int>(1);
+        var signal2 = new Signal<int>(2);
+        var signal3 = new Signal<int>(2);
+
+        var taskCompletionSource1 = new TaskCompletionSource();
+        var taskCompletionSource2 = new TaskCompletionSource();
+
+        taskCompletionSource1.SetResult();
+
+        var context = new SignalingContext();
+        var buildRenderTree = new Mock<Action>();
+        var component = new TestComponent(() =>
+        {
+            buildRenderTree.Object.Invoke();
+
+            signal1.Get();
+            signal2.Get();
+            signal3.Get();
+
+            taskCompletionSource2.SetResult();
+            taskCompletionSource1.Task.Wait();
+
+            recalculationCount++;
+            value = signal3.Get();
+        });
+
+        var rendererFake = RendererFake.Create();
+        rendererFake.Attach(component);
+
+        await rendererFake.Dispatcher.InvokeAsync(
+            component.ExecuteStateHasChanged);
+
+        buildRenderTree.Invocations.Clear();
+
+        // act
+        taskCompletionSource1 = new();
+        taskCompletionSource2 = new();
+
+        var setterTask1 = Task.Run(() => signal1.Set(2));
+        await taskCompletionSource2.Task;
+
+        var setterTask2 = Task.Run(() => signal2.Set(3));
+        while (!component!.IsRenderingQueued)
+            ;
+
+        signal3.Set(4);
+
+        taskCompletionSource2 = new();
+        taskCompletionSource1.SetResult();
+
+        await setterTask1;
+        await setterTask2;
+
+        while (recalculationCount < 3)
+            ;
+
+        // assert
+        Assert.Equal(4, value);
+        buildRenderTree.Verify(obj => obj(), Times.Exactly(2));
+    }
 
     internal class TestComponent(Action buildRenderTree) : LighthouseComponentBase
     {
@@ -498,6 +602,7 @@ public partial class LighthouseComponentBaseTest
 
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
+            base.BuildRenderTree(builder);
             buildRenderTree();
         }
     }

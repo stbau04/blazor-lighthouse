@@ -258,4 +258,55 @@ public class ComputedTest
         Assert.Equal(2, recalculationCount1);
         Assert.Equal(2, recalculationCount2);
     }
+
+    [Fact]
+    public async Task TestMultipleSignalChangesAtOnce()
+    {
+        // arrange
+        var recalculationCount = 0;
+
+        var signal1 = new Signal<int>(1);
+        var signal2 = new Signal<int>(2);
+        var signal3 = new Signal<int>(2);
+
+        var taskCompletionSource1 = new TaskCompletionSource();
+        var taskCompletionSource2 = new TaskCompletionSource();
+
+        taskCompletionSource1.SetResult();
+        var computed = new Computed<int>(() =>
+        {
+            signal1.Get();
+            signal2.Get();
+            signal3.Get();
+
+            taskCompletionSource2.SetResult();
+            taskCompletionSource1.Task.Wait();
+
+            recalculationCount++;
+            return signal3.Get();
+        });
+
+        // act
+        taskCompletionSource1 = new();
+        taskCompletionSource2 = new();
+
+        var setterTask1 = Task.Run(() => signal1.Set(2));
+        await taskCompletionSource2.Task;
+
+        var setterTask2 = Task.Run(() => signal2.Set(3));
+        while (!computed!.IsEvaluationQueued)
+            ;
+
+        signal3.Set(4);
+
+        taskCompletionSource2 = new();
+        taskCompletionSource1.SetResult();
+
+        await setterTask1;
+        await setterTask2;
+
+        // assert
+        Assert.Equal(4, computed.Get());
+        Assert.Equal(3, recalculationCount);
+    }
 }
