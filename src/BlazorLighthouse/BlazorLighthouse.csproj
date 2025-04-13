@@ -8,9 +8,24 @@
 		<WarningsAsErrors>nullable</WarningsAsErrors>
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+		<EnablePackageValidation>true</EnablePackageValidation>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Authors>Stephan Bauer</Authors>
+		<Description>Blazor Lighthouse provides an API for change detection and therefore allows performing recalculations only when it is actually necessary.</Description>
+		<PackageProjectUrl>https://github.com/stbau04/blazor-lighthouse</PackageProjectUrl>
+		<PackageTags>library</PackageTags>
+
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="DotNet.ReproducibleBuilds" Version="1.2.25">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.0" />
 	</ItemGroup>
 

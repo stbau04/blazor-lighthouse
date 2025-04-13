@@ -1,0 +1,90 @@
+name: Publish Nuget
+
+on:
+  release:
+    types:
+      - published
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  NUGET_DIRECTORY: ${{ github.workspace}}/nuget
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+    - name: Build and Test
+      working-directory: ./src
+      run: dotnet test --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+    - name: Verify Code Coverage
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: "**/*Cobertura.xml"
+        fail_below_min: true 
+        thresholds: "100 100"
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [ build-and-test ]
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+    - name: Publish packages
+      working-directory: ./src
+      run: dotnet pack --configuration Release --output ${{ env.NUGET_DIRECTORY }}
+    - uses: actions/upload-artifact@v3
+      with:
+        name: nuget
+        if-no-files-found: error
+        retention-days: 7
+        path: ${{ env.NUGET_DIRECTORY }}/*.nupkg
+
+  validate-nuget:
+    runs-on: ubuntu-latest
+    needs: [ publish ]
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: nuget
+          path: ${{ env.NUGET_DIRECTORY }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Install Nuget Validator
+        run: dotnet tool update Meziantou.Framework.NuGetPackageValidation.Tool --global
+      - name: Validate Package
+        run: meziantou.validate-nuget-package "${{ env.NUGET_DIRECTORY }}/*.nupkg"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [ validate-nuget ]
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: nuget
+          path: ${{ env.NUGET_DIRECTORY }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Publish NuGet package
+        run: dotnet nuget push ${{ env.NUGET_DIRECTORY }}/*.nupkg --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+  
