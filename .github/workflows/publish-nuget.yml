@@ -74,7 +74,7 @@ jobs:
       - name: Install Nuget Validator
         run: dotnet tool update Meziantou.Framework.NuGetPackageValidation.Tool --global
       - name: Validate Package
-        run: meziantou.validate-nuget-package "${{ env.NUGET_DIRECTORY }}/BlazorLighthouse.1.0.0.nupkg"
+        run: for NUPKG_FILE in {{ env.NUGET_DIRECTORY }}*.nupkg; do meziantou.validate-nuget-package "$NUPKG_FILE" done
 
   deploy:
     runs-on: ubuntu-latest
@@ -90,5 +90,5 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Publish NuGet package
-        run: dotnet nuget push ${{ env.NUGET_DIRECTORY }}/BlazorLighthouse.1.0.0.nupkg --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push ${{ env.NUGET_DIRECTORY }}/*.nupkg --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
   
