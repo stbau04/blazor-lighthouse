@@ -47,10 +47,10 @@ jobs:
     - name: GitHub Tag Name example
       run: |
         echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
-        echo "Tag name from github.ref_name: ${{  github.ref_name#v }}"
+        echo "Tag name from github.ref_name: $(echo ${{ github.ref_name }} | cut -c 2-)"
     - name: Publish packages
       working-directory: ./src
-      run: dotnet pack --configuration Release --output ${{ env.NUGET_DIRECTORY }} /p:Version=$(Build.BuildNumber)
+      run: dotnet pack --configuration Release --output ${{ env.NUGET_DIRECTORY }} /p:Version=$(echo ${{ github.ref_name }} | cut -c 2-)
     - uses: actions/upload-artifact@v4
       with:
         name: nuget
