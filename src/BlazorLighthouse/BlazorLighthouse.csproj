@@ -14,6 +14,8 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
+		<PackageId>stbau04.BlazorLighthouse</PackageId>
+
 		<Authors>Stephan Bauer</Authors>
 		<Description>Blazor Lighthouse provides an API for change detection and therefore allows performing recalculations only when it is actually necessary.</Description>
 		<PackageProjectUrl>https://github.com/stbau04/blazor-lighthouse</PackageProjectUrl>
