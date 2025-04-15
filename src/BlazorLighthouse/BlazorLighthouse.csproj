@@ -9,6 +9,7 @@
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 
+		<IsPackable>true</IsPackable>
 		<EnablePackageValidation>true</EnablePackageValidation>
 	</PropertyGroup>
 
@@ -16,6 +17,8 @@
 		<Authors>Stephan Bauer</Authors>
 		<Description>Blazor Lighthouse provides an API for change detection and therefore allows performing recalculations only when it is actually necessary.</Description>
 		<PackageProjectUrl>https://github.com/stbau04/blazor-lighthouse</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>logo.png</PackageIcon>
 		<PackageTags>library</PackageTags>
 
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -28,5 +31,10 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.0" />
 	</ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\..\img\logo.png" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 
 </Project>
