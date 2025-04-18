@@ -12,14 +12,7 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Build and Test
-        uses: ./.github/workflows/build-and-test.yml
+    uses: ./.github/workflows/build-and-test.yml
 
   deploy:
     runs-on: ubuntu-latest
