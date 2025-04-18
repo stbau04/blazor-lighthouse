@@ -21,9 +21,9 @@
 		<PackageProjectUrl>https://github.com/stbau04/blazor-lighthouse</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageIcon>logo.png</PackageIcon>
-		<PackageTags>library</PackageTags>
 
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>library</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -35,7 +35,7 @@
 	</ItemGroup>
 
     <ItemGroup>
-        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
         <None Include="..\..\img\logo.png" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
