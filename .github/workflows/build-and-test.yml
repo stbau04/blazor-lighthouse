@@ -5,7 +5,11 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_call:
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  NUGET_DIRECTORY: ${{ github.workspace}}/nuget
 
 jobs:
   build-and-test:
@@ -43,7 +47,7 @@ jobs:
         dotnet-version: 9.0.x
     - name: Publish Packages
       working-directory: ./src
-      run: dotnet pack --configuration Release --output ${{ env.NUGET_DIRECTORY }} /p:Version=$(echo ${{ github.ref_name }} | cut -c 2-)
+      run: dotnet pack --configuration Release --output ${{ env.NUGET_DIRECTORY }}
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
