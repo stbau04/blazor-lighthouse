@@ -7,15 +7,3 @@
 
 ## About the project
 Currently, the project is only a proof of concept. Mainly the Blazor integration is not fully implemented yet, there are some heavy optimizations to be made. If there are any ideas/feedback, it is always welcome.
-
-## Getting started
-*Blazor Lighthouse* does not need any special setup. Just add the project as a reference and start using it. Details on how to do so can be found in the following files:
-
- - [Basic Concepts of *Blazor Lighthouse*](docs/BasicConcepts.md)
- - [Pitfalls of Memory Leaks](docs/MemoryLeaks.md)
- - [Usage with Blazor Components](docs/LighthouseComponentBase.md)
-
-<br/>
-<p align="center">
-    <img src="img/logo.svg" width="200px" alt="Logo">
-</p>
