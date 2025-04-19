@@ -44,7 +44,7 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
-    - name: Publish Packages
+    - name: Publish Nuget-Packages
       working-directory: ./src
       run: dotnet pack --configuration Release --output ${{ env.NUGET_DIRECTORY }} /p:Version=$(echo ${{ github.ref_name }} | cut -c 2-)
     - name: Upload Artifacts
@@ -68,9 +68,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-      - name: Install Nuget Validator
+      - name: Install Nuget-Package-Validator
         run: dotnet tool update Meziantou.Framework.NuGetPackageValidation.Tool --global
-      - name: Validate Package
+      - name: Validate Nuget-Packages
         run: for NUPKG_FILE in ${{ env.NUGET_DIRECTORY }}/*.nupkg; do meziantou.validate-nuget-package "$NUPKG_FILE"; done
 
   deploy:
@@ -86,6 +86,5 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-      - name: Publish NuGet package
+      - name: Publish NuGet-Packages
         run: dotnet nuget push ${{ env.NUGET_DIRECTORY }}/*.nupkg --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
-  
