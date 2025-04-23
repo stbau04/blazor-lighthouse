@@ -29,11 +29,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.0-preview.3.25172.1" />
+
 		<PackageReference Include="DotNet.ReproducibleBuilds" Version="1.2.25">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.0-preview.3.25172.1" />
 	</ItemGroup>
 
     <ItemGroup>
