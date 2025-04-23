@@ -8,7 +8,7 @@ namespace BlazorLighthouse.Core;
 /// <typeparam name="T">Value type</typeparam>
 public sealed class Signal<T> : ReadonlySignal<T>
 {
-    private readonly object lockObject = new();
+    private readonly Lock lockObject = new();
 
     private T value;
 

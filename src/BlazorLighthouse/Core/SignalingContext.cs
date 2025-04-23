@@ -11,7 +11,7 @@ public class SignalingContext : IDisposable
 
     private bool isDisposed = false;
 
-    internal object LockObject { get; } = new();
+    internal Lock LockObject { get; } = new();
 
     /// <summary>
     /// Dispose the signaling context. Enforces clean up of all signaling ressources allocated by object referencing this context.

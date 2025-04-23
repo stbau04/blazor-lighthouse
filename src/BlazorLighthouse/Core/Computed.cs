@@ -12,7 +12,7 @@ public sealed class Computed<T> : ReadonlySignal<T>, IRefreshable
     private readonly Func<T> valueProvider;
     private readonly AccessTracker accessTracker;
     private readonly Signal<T> signal;
-    private readonly object lockObject = new();
+    private readonly Lock lockObject = new();
 
     internal bool IsEvaluationQueued { get; private set; } = false;
 

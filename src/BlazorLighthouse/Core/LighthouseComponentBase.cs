@@ -12,7 +12,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
 {
     private readonly RenderFragment renderFragment;
     private readonly AccessTracker accessTracker;
-    private readonly object lockObject = new();
+    private readonly Lock lockObject = new();
 
     private RenderHandle renderHandle;
 
