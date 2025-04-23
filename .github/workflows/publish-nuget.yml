@@ -21,7 +21,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+        global-json-file: src/global.json
     - name: Build and Test
       working-directory: ./src
       run: dotnet test --verbosity normal --logger trx --collect:"XPlat Code Coverage"
@@ -43,7 +43,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+        global-json-file: src/global.json
     - name: Publish Nuget-Packages
       working-directory: ./src
       run: dotnet pack --configuration Release --output ${{ env.NUGET_DIRECTORY }} /p:Version=$(echo ${{ github.ref_name }} | cut -c 2-)
@@ -67,7 +67,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          global-json-file: src/global.json
       - name: Install Nuget-Package-Validator
         run: dotnet tool update Meziantou.Framework.NuGetPackageValidation.Tool --global
       - name: Validate Nuget-Packages
@@ -85,6 +85,6 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          global-json-file: src/global.json
       - name: Publish Nuget-Packages
         run: dotnet nuget push ${{ env.NUGET_DIRECTORY }}/*.nupkg --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
