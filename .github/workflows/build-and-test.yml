@@ -22,7 +22,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.x
     - name: Build and Test
       working-directory: ./src
       run: dotnet test --verbosity normal --logger trx --collect:"XPlat Code Coverage"
@@ -44,7 +44,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.x
     - name: Publish Nuget-Packages
       working-directory: ./src
       run: dotnet pack --configuration Release --output ${{ env.NUGET_DIRECTORY }}
@@ -68,7 +68,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 9.x
       - name: Install Nuget-Package-Validator
         run: dotnet tool update Meziantou.Framework.NuGetPackageValidation.Tool --global
       - name: Validate Nuget-Packages
