@@ -45,6 +45,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     /// <returns>A completed task, as nothing is run async</returns>
     public Task SetParametersAsync(ParameterView parameters)
     {
+        parameters.SetParameterProperties(this);
         if (SetIsInitiallyRendered()
             && AreAllParametersSignals(parameters))
         {
