@@ -526,7 +526,7 @@ public partial class LighthouseComponentBaseTest
 
         var signal1 = new Signal<int>(1);
         var signal2 = new Signal<int>(2);
-        var signal3 = new Signal<int>(2);
+        var signal3 = new Signal<int>(3);
 
         var taskCompletionSource1 = new TaskCompletionSource();
         var taskCompletionSource2 = new TaskCompletionSource();
@@ -562,14 +562,14 @@ public partial class LighthouseComponentBaseTest
         taskCompletionSource1 = new();
         taskCompletionSource2 = new();
 
-        var setterTask1 = Task.Run(() => signal1.Set(2));
+        var setterTask1 = Task.Run(() => signal1.Set(4));
         await taskCompletionSource2.Task;
 
-        var setterTask2 = Task.Run(() => signal2.Set(3));
+        var setterTask2 = Task.Run(() => signal2.Set(5));
         while (!component!.IsRenderingQueued)
             ;
 
-        signal3.Set(4);
+        signal3.Set(6);
 
         taskCompletionSource2 = new();
         taskCompletionSource1.SetResult();
@@ -581,7 +581,7 @@ public partial class LighthouseComponentBaseTest
             ;
 
         // assert
-        Assert.Equal(4, value);
+        Assert.Equal(6, value);
         buildRenderTree.Verify(obj => obj(), Times.Exactly(2));
     }
 

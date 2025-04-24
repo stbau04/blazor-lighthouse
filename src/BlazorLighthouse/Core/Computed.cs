@@ -11,8 +11,8 @@ public sealed class Computed<T> : ReadonlySignal<T>, IRefreshable
 {
     private readonly Func<T> valueProvider;
     private readonly AccessTracker accessTracker;
-    private readonly Signal<T> signal;
-    private readonly object lockObject = new();
+    private readonly Lazy<Signal<T>> lazySignal;
+    private readonly Lock lockObject = new();
 
     internal bool IsEvaluationQueued { get; private set; } = false;
 
@@ -35,14 +35,16 @@ public sealed class Computed<T> : ReadonlySignal<T>, IRefreshable
     {
         this.valueProvider = valueProvider;
         accessTracker = new(this, context);
-        signal = new(EvaluateValueProvider());
+
+        lazySignal = new(() => new(EvaluateValueProvider()));
+        _ = lazySignal.Value;
     }
 
     /// <inheritdoc/>
     public override T Get()
     {
         context.AssertIsNotDisposed();
-        return signal.Get();
+        return lazySignal.Value.Get();
     }
 
     private T EvaluateValueProvider()
@@ -75,10 +77,10 @@ public sealed class Computed<T> : ReadonlySignal<T>, IRefreshable
         if (!SetEvaluationQueued())
             return;
 
-        signal.Set(EvaluateValueProvider());
+        lazySignal.Value.Set(EvaluateValueProvider());
     }
 
-    void IRefreshable.Dispose(SignalBase signal)
+    void IRefreshable.Dispose(AbstractSignal signal)
     {
         accessTracker.Untrack(signal);
     }

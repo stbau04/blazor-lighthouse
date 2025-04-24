@@ -248,7 +248,7 @@ public class EffectTest
 
         var signal1 = new Signal<int>(1);
         var signal2 = new Signal<int>(2);
-        var signal3 = new Signal<int>(2);
+        var signal3 = new Signal<int>(3);
 
         var taskCompletionSource1 = new TaskCompletionSource();
         var taskCompletionSource2 = new TaskCompletionSource();
@@ -271,14 +271,14 @@ public class EffectTest
         taskCompletionSource1 = new();
         taskCompletionSource2 = new();
 
-        var setterTask1 = Task.Run(() => signal1.Set(2));
+        var setterTask1 = Task.Run(() => signal1.Set(4));
         await taskCompletionSource2.Task;
 
-        var setterTask2 = Task.Run(() => signal2.Set(3));
+        var setterTask2 = Task.Run(() => signal2.Set(5));
         while (!effect!.IsRunQueued)
             ;
 
-        signal3.Set(4);
+        signal3.Set(6);
 
         taskCompletionSource2 = new();
         taskCompletionSource1.SetResult();
@@ -287,7 +287,7 @@ public class EffectTest
         await setterTask2;
 
         // assert
-        Assert.Equal(4, value);
+        Assert.Equal(6, value);
         Assert.Equal(3, recalculationCount);
     }
 }

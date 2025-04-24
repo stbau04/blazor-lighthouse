@@ -10,7 +10,7 @@ public sealed class Effect : IRefreshable
 {
     private readonly Action callback;
     private readonly AccessTracker accessTracker;
-    private readonly object lockObject = new();
+    private readonly Lock lockObject = new();
 
     internal bool IsRunQueued { get; private set; } = false;
 
@@ -44,15 +44,15 @@ public sealed class Effect : IRefreshable
         });
     }
 
-    private bool SetRunningQueued()
+    private bool SetRunQueued()
     {
         lock (lockObject)
         {
-            return SetRunQueued();
+            return SetRunQueuedSync();
         }
     }
 
-    private bool SetRunQueued()
+    private bool SetRunQueuedSync()
     {
         if (IsRunQueued)
             return false;
@@ -63,13 +63,13 @@ public sealed class Effect : IRefreshable
 
     void IRefreshable.Refresh()
     {
-        if (!SetRunningQueued())
+        if (!SetRunQueued())
             return;
 
         RunCallback();
     }
 
-    void IRefreshable.Dispose(SignalBase signal)
+    void IRefreshable.Dispose(AbstractSignal signal)
     {
         accessTracker.Untrack(signal);
     }
