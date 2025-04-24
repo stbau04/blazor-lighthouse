@@ -44,15 +44,15 @@ public sealed class Effect : IRefreshable
         });
     }
 
-    private bool SetRunningQueued()
+    private bool SetRunQueued()
     {
         lock (lockObject)
         {
-            return SetRunQueued();
+            return SetRunQueuedSync();
         }
     }
 
-    private bool SetRunQueued()
+    private bool SetRunQueuedSync()
     {
         if (IsRunQueued)
             return false;
@@ -63,7 +63,7 @@ public sealed class Effect : IRefreshable
 
     void IRefreshable.Refresh()
     {
-        if (!SetRunningQueued())
+        if (!SetRunQueued())
             return;
 
         RunCallback();
