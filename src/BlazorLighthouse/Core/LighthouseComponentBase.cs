@@ -13,8 +13,10 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     private readonly RenderFragment renderFragment;
     private readonly AccessTracker accessTracker;
     private readonly Lock lockObject = new();
+    private readonly Lock initiallyRenderedLockObject = new();
 
     private RenderHandle renderHandle;
+    private bool isInitiallyRendered = false;
 
     internal bool IsRenderingQueued { get; private set; } = false;
 
@@ -43,7 +45,12 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     /// <returns>A completed task, as nothing is run async</returns>
     public Task SetParametersAsync(ParameterView parameters)
     {
-        parameters.SetParameterProperties(this);
+        if (SetIsInitiallyRendered()
+            && AreAllParametersSignals(parameters))
+        {
+            return Task.CompletedTask;
+        }
+
         StateHasChanged();
         return Task.CompletedTask;
     }
@@ -85,6 +92,30 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
             IsRenderingQueued = false;
             BuildRenderTree(builder);
         });
+    }
+
+    private static bool AreAllParametersSignals(ParameterView parameters)
+    {
+        return parameters
+            .ToDictionary()
+            .All(parameter => parameter.Value is AbstractSignal);
+    }
+
+    private bool SetIsInitiallyRendered()
+    {
+        lock (initiallyRenderedLockObject)
+        {
+            return SetIsInitiallyRenderedSync();
+        }
+    }
+
+    private bool SetIsInitiallyRenderedSync()
+    {
+        if (isInitiallyRendered)
+            return true;
+
+        isInitiallyRendered = true;
+        return false;
     }
 
     private bool SetRenderingQueued()
