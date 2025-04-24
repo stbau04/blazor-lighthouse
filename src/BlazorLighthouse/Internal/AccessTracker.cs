@@ -8,7 +8,7 @@ internal class AccessTracker : IContextDisposable
     private readonly IRefreshable refreshable;
     private readonly SignalingContext context;
 
-    private HashSet<SignalBase> signals = [];
+    private HashSet<AbstractSignal> signals = [];
 
     public AccessTracker(IRefreshable refreshable, SignalingContext? context)
     {
@@ -35,7 +35,7 @@ internal class AccessTracker : IContextDisposable
         }
     }
 
-    public void Untrack(SignalBase signal)
+    public void Untrack(AbstractSignal signal)
     {
         lock (context.LockObject)
         {
@@ -66,7 +66,7 @@ internal class AccessTracker : IContextDisposable
         return value;
     }
 
-    private void UntrackSynchronized(SignalBase signal)
+    private void UntrackSynchronized(AbstractSignal signal)
     {
         signals.Remove(signal);
     }

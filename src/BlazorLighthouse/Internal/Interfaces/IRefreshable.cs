@@ -8,12 +8,12 @@ internal interface IRefreshable
     public static IRefreshable None { get; } = new EmptyRefreshable();
 
     internal void Refresh();
-    internal void Dispose(SignalBase signal);
+    internal void Dispose(AbstractSignal signal);
 
     [ExcludeFromCodeCoverage]
     public class EmptyRefreshable : IRefreshable
     {
-        void IRefreshable.Dispose(SignalBase signal)
+        void IRefreshable.Dispose(AbstractSignal signal)
         {
 
         }

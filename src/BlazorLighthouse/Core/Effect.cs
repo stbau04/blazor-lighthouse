@@ -69,7 +69,7 @@ public sealed class Effect : IRefreshable
         RunCallback();
     }
 
-    void IRefreshable.Dispose(SignalBase signal)
+    void IRefreshable.Dispose(AbstractSignal signal)
     {
         accessTracker.Untrack(signal);
     }

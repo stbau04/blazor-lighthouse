@@ -5,7 +5,7 @@ namespace BlazorLighthouse.Core;
 /// <summary>
 /// Base class for all types of signals
 /// </summary>
-public abstract class SignalBase : IContextDisposable
+public abstract class AbstractSignal : IContextDisposable
 {
     /// <summary>
     /// Signaling context for the current signal
@@ -14,7 +14,7 @@ public abstract class SignalBase : IContextDisposable
 
     private HashSet<IRefreshable> refreshables = [];
 
-    internal SignalBase(SignalingContext context)
+    internal AbstractSignal(SignalingContext context)
     {
         this.context = context;
         context.RegisterContextDisposable(this);

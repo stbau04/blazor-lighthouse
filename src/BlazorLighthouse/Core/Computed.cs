@@ -80,7 +80,7 @@ public sealed class Computed<T> : ReadonlySignal<T>, IRefreshable
         lazySignal.Value.Set(EvaluateValueProvider());
     }
 
-    void IRefreshable.Dispose(SignalBase signal)
+    void IRefreshable.Dispose(AbstractSignal signal)
     {
         accessTracker.Untrack(signal);
     }

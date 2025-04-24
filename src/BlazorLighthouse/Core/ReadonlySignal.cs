@@ -4,7 +4,7 @@
 /// Simple readonly value store that allows subscription to changes
 /// </summary>
 /// <typeparam name="T">Value type</typeparam>
-public abstract class ReadonlySignal<T> : SignalBase
+public abstract class ReadonlySignal<T> : AbstractSignal
 {
     internal ReadonlySignal(SignalingContext context)
         : base(context)
