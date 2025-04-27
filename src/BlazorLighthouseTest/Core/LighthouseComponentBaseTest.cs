@@ -122,6 +122,70 @@ public partial class LighthouseComponentBaseTest
     }
 
     [Fact]
+    public async Task TestSetParametersAsync_AfterInitWithNewParameter()
+    {
+        // arrange
+        var parameter = new object();
+        var parameters = ParameterView.FromDictionary(new Dictionary<string, object?>()
+        {
+            { nameof(TestComponent.Property1), parameter }
+        });
+
+        var buildRenderTree = new Mock<Action>();
+        var component = new TestComponent(buildRenderTree.Object);
+
+        var rendererFake = RendererFake.Create();
+        rendererFake.Attach(component);
+
+        await rendererFake.Dispatcher.InvokeAsync(async () =>
+            await component.SetParametersAsync(ParameterView.Empty));
+
+        buildRenderTree.Setup(obj => obj.Invoke())
+            .Callback(() => Assert.Equal(parameter, component.Property1));
+
+        // act
+        await rendererFake.Dispatcher.InvokeAsync(async () =>
+            await component.SetParametersAsync(parameters));
+
+        // assert
+        Assert.Equal(parameter, component.Property1);
+
+        buildRenderTree.Verify(obj => obj.Invoke(), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task TestSetParametersAsync_AfterInitWithRemovedParameter()
+    {
+        // arrange
+        var parameter = new object();
+        var parameters = ParameterView.FromDictionary(new Dictionary<string, object?>()
+        {
+            { nameof(TestComponent.Property1), parameter }
+        });
+
+        var buildRenderTree = new Mock<Action>();
+        var component = new TestComponent(buildRenderTree.Object);
+
+        var rendererFake = RendererFake.Create();
+        rendererFake.Attach(component);
+
+        buildRenderTree.Setup(obj => obj.Invoke())
+            .Callback(() => Assert.Equal(parameter, component.Property1));
+
+        await rendererFake.Dispatcher.InvokeAsync(async () =>
+            await component.SetParametersAsync(parameters));
+
+        // act
+        await rendererFake.Dispatcher.InvokeAsync(async () =>
+            await component.SetParametersAsync(ParameterView.Empty));
+
+        // assert
+        Assert.Equal(parameter, component.Property1);
+
+        buildRenderTree.Verify(obj => obj.Invoke(), Times.Once);
+    }
+
+    [Fact]
     public async Task TestSetParametersAsync_AfterInitWithSignalParameter()
     {
         // arrange
