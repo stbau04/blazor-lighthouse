@@ -125,7 +125,7 @@ public partial class LighthouseComponentBaseTest
     public async Task TestSetParametersAsync_AfterInitWithNewParameter()
     {
         // arrange
-        var parameter = new object();
+        var parameter = new Signal<int>(0);
         var parameters = ParameterView.FromDictionary(new Dictionary<string, object?>()
         {
             { nameof(TestComponent.Property1), parameter }
@@ -157,7 +157,7 @@ public partial class LighthouseComponentBaseTest
     public async Task TestSetParametersAsync_AfterInitWithRemovedParameter()
     {
         // arrange
-        var parameter = new object();
+        var parameter = new Signal<int>(0);
         var parameters = ParameterView.FromDictionary(new Dictionary<string, object?>()
         {
             { nameof(TestComponent.Property1), parameter }
