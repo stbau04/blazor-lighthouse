@@ -32,7 +32,6 @@ public partial class LighthouseComponentBaseTest
 
         // assert
         Assert.Equal(parameter, component.Property1);
-
         buildRenderTree.Verify(obj => obj.Invoke(), Times.Once);
     }
     
@@ -61,7 +60,6 @@ public partial class LighthouseComponentBaseTest
 
         // assert
         Assert.Equal(parameter, component.Property1);
-
         buildRenderTree.Verify(obj => obj.Invoke(), Times.Once);
     }
     
@@ -84,12 +82,11 @@ public partial class LighthouseComponentBaseTest
 
         // assert
         Assert.Null(component.Property1);
-
         buildRenderTree.Verify(obj => obj.Invoke(), Times.Once);
     }
 
     [Fact]
-    public async Task TestSetParametersAsync_AfterInit()
+    public async Task TestSetParametersAsync_MultipleTimes()
     {
         // arrange
         var parameter = new object();
@@ -116,14 +113,13 @@ public partial class LighthouseComponentBaseTest
 
         // assert
         Assert.Equal(parameter, component.Property1);
-
         buildRenderTree.Verify(obj => obj.Invoke(), Times.Exactly(2));
     }
 
     [Fact]
-    public async Task TestSetParametersAsync_AfterInitWithNewParameter()
+    public async Task TestSetParametersAsync_MultipleTimesWithNewParameter()
     {
-        // arrange
+        // arrange1
         var parameter = new Signal<int>(0);
         var parameters = ParameterView.FromDictionary(new Dictionary<string, object?>()
         {
@@ -148,12 +144,11 @@ public partial class LighthouseComponentBaseTest
 
         // assert
         Assert.Equal(parameter, component.Property1);
-
         buildRenderTree.Verify(obj => obj.Invoke(), Times.Exactly(2));
     }
 
     [Fact]
-    public async Task TestSetParametersAsync_AfterInitWithRemovedParameter()
+    public async Task TestSetParametersAsync_MultipleTimesWithRemovedParameter()
     {
         // arrange
         var parameter = new Signal<int>(0);
@@ -180,12 +175,11 @@ public partial class LighthouseComponentBaseTest
 
         // assert
         Assert.Equal(parameter, component.Property1);
-
         buildRenderTree.Verify(obj => obj.Invoke(), Times.Once);
     }
 
     [Fact]
-    public async Task TestSetParametersAsync_AfterInitWithSignalParameter()
+    public async Task TestSetParametersAsync_MultipleTimesWithSignalParameter()
     {
         // arrange
         var parameter = new Signal<int>(0);
@@ -212,12 +206,11 @@ public partial class LighthouseComponentBaseTest
 
         // assert
         Assert.Equal(parameter, component.Property1);
-
         buildRenderTree.Verify(obj => obj.Invoke(), Times.Once);
     }
 
     [Fact]
-    public async Task TestSetParametersAsync_AfterInitWithChangedSignalParameter()
+    public async Task TestSetParametersAsync_MultipleTimesWithChangedSignalParameter()
     {
         // arrange
         var parameter = new Signal<int>(0);
@@ -250,12 +243,11 @@ public partial class LighthouseComponentBaseTest
 
         // assert
         Assert.Equal(parameter, component.Property1);
-
         buildRenderTree.Verify(obj => obj.Invoke(), Times.Exactly(2));
     }
 
     [Fact]
-    public async Task TestSetParametersAsync_AfterInitWithNoParameters()
+    public async Task TestSetParametersAsync_MultipleTimesWithNoParameters()
     {
         // arrange
         var buildRenderTree = new Mock<Action>();
@@ -276,12 +268,11 @@ public partial class LighthouseComponentBaseTest
 
         // assert
         Assert.Null(component.Property1);
-
         buildRenderTree.Verify(obj => obj.Invoke(), Times.Once);
     }
 
     [Fact]
-    public async Task TestSetParametersAsync_AfterInitiWithMultipleParameters()
+    public async Task TestSetParametersAsync_MultipleTimesWithMultipleParameters()
     {
         // arrange
         var parameter1 = new object();
@@ -320,7 +311,7 @@ public partial class LighthouseComponentBaseTest
     }
 
     [Fact]
-    public async Task TestSetParametersAsync_AfterInitiWithMultipleSignalParameters()
+    public async Task TestSetParametersAsync_MultipleTimesWithMultipleSignalParameters()
     {
         // arrange
         var parameter1 = new Signal<int>(0);
