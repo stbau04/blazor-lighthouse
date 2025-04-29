@@ -37,7 +37,7 @@ public partial class LighthouseComponentBaseTest
     }
     
     [Fact]
-    public async Task TestSetParametersAsync_SignalParamter()
+    public async Task TestSetParametersAsync_SignalParameter()
     {
         // arrange
         var parameter = new Signal<int>(0);

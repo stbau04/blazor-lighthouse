@@ -76,7 +76,6 @@ public partial class LighthouseComponentBaseTest
     {
         [Parameter]
         public object? Property1 { get; set; }
-        
         [Parameter]
         public object? Property2 { get; set; }
 
