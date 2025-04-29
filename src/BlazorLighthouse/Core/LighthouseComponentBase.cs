@@ -12,8 +12,8 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
 {
     private readonly RenderFragment renderFragment;
     private readonly AccessTracker accessTracker;
-    private readonly Lock lockObject = new();
-    private readonly Lock parameterChangeLockObject = new();
+    private readonly Lock parametersChangedLockObject = new();
+    private readonly Lock renderingQueueLockObject = new();
 
     private RenderHandle renderHandle;
     private IReadOnlyDictionary<string, object?>? parameters;
@@ -46,7 +46,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     public Task SetParametersAsync(ParameterView parameters)
     {
         parameters.SetParameterProperties(this);
-        if (HasParamterChanged(parameters))
+        if (HaveParamtersChanged(parameters))
             StateHasChanged();
 
         return Task.CompletedTask;
@@ -91,42 +91,41 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
         });
     }
 
-    private bool HasParamterChanged(ParameterView parameters)
+    private bool HaveParamtersChanged(ParameterView parameters)
     {
-        lock (parameterChangeLockObject)
+        lock (parametersChangedLockObject)
         {
-            return HasParamterChangedSync(parameters);
+            return HaveParametersChangedSync(parameters);
         }
     }
 
-    private bool HasParamterChangedSync(ParameterView parameters)
+    private bool HaveParametersChangedSync(ParameterView parameters)
     {
         var oldParamters = this.parameters;
         this.parameters = parameters.ToDictionary();
         if (oldParamters == null)
             return true;
 
-        var hasParameterChanged = this.parameters.Any(
-            parameter => IsParameterChanged(oldParamters, parameter));
-        return hasParameterChanged;
+        return this.parameters.Any(
+            parameter => HasParameterChanged(oldParamters, parameter));
     }
 
-    private bool IsParameterChanged(
+    private bool HasParameterChanged(
         IReadOnlyDictionary<string, object?> oldParameters,
         KeyValuePair<string, object?> parameter)
     {
-        if (parameter.Value is not AbstractSignal abstractSignal)
+        if (parameter.Value is not AbstractSignal abstractSignal
+            || !oldParameters.TryGetValue(parameter.Key, out var value))
+        {
             return true;
+        }
 
-        if (!oldParameters.TryGetValue(parameter.Key, out var value))
-            return true;
-
-        return value != abstractSignal;
+        return abstractSignal != value;
     }
 
     private bool SetRenderingQueued()
     {
-        lock (lockObject)
+        lock (renderingQueueLockObject)
         {
             return SetRenderingQueuedSync();
         }
