@@ -119,7 +119,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestSetParametersAsync_MultipleTimesWithNewParameter()
     {
-        // arrange1
+        // arrange
         var parameter = new Signal<int>(0);
         var parameters = ParameterView.FromDictionary(new Dictionary<string, object?>()
         {

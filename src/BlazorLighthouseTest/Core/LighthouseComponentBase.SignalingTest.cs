@@ -9,6 +9,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestValueChanged()
     {
+        // arrange
         var signal = new Signal<int>(1);
         var siganlValue = 0;
 
@@ -80,6 +81,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestValueNotChanged()
     {
+        // arrange
         var signal = new Signal<int>(1);
         var siganlValue = 0;
 
@@ -109,6 +111,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestValueChangedMultipleTimes()
     {
+        // arrange
         var signal = new Signal<int>(1);
         var siganlValue = 0;
 
@@ -139,6 +142,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestUnreferencedValueChanged()
     {
+        // arrange
         var signal1 = new Signal<int>(1);
         var signal2 = new Signal<int>(2);
         var siganlValue = 0;
@@ -169,6 +173,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestUnreferencedValueChanged_WasReferenced()
     {
+        // arrange
         var signal1 = new Signal<int>(1);
         var signal2 = new Signal<int>(2);
         var siganlValue = 0;
@@ -206,6 +211,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestNestedComputedValue()
     {
+        // arrange
         var computedRecalculationCount = 0;
         var computedValue = 0;
 
@@ -226,20 +232,20 @@ public partial class LighthouseComponentBaseTest
         var rendererFake = RendererFake.Create();
         rendererFake.Attach(component);
 
+        // act
         await rendererFake.Dispatcher.InvokeAsync(
             component.ExecuteStateHasChanged);
-
-        buildRenderTree.Invocations.Clear();
 
         // assert
         Assert.Equal(3, computedValue);
         Assert.Equal(1, computedRecalculationCount);
-        buildRenderTree.Verify(obj => obj.Invoke(), Times.Never);
+        buildRenderTree.Verify(obj => obj.Invoke(), Times.Once);
     }
 
     [Fact]
     public async Task TestNestedComputedValue_ValueChanged()
     {
+        // arrange
         var computedRecalculationCount = 0;
         var computedValue = 0;
 
@@ -277,6 +283,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestNestedComputedValue_NestedValueChanged()
     {
+        // arrange
         var computedRecalculationCount = 0;
         var computedValue = 0;
 
@@ -357,6 +364,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestComponentDisposed()
     {
+        // arrange
         var signal = new Signal<int>(1);
         var siganlValue = 0;
 
@@ -391,6 +399,7 @@ public partial class LighthouseComponentBaseTest
     [Fact]
     public async Task TestReferencedSignalDisposed()
     {
+        // arrange
         var context = new SignalingContext();
 
         var signal = new Signal<int>(context, 1);
