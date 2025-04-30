@@ -2,13 +2,14 @@
 using BlazorLighthouse.Internal.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using System.Diagnostics;
 
 namespace BlazorLighthouse.Core;
 
 /// <summary>
 /// Base for Blazor components that should subscribe to signal value changes 
 /// </summary>
-public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshable
+public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshable, IHandleAfterRender, IHandleEvent
 {
     private readonly RenderFragment renderFragment;
     private readonly AccessTracker accessTracker;
@@ -16,9 +17,43 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     private readonly Lock renderingQueueLockObject = new();
 
     private RenderHandle renderHandle;
+    private (IComponentRenderMode? mode, bool cached) renderMode;
     private IReadOnlyDictionary<string, object?>? parameters;
 
+    private bool initialized;
+    private bool hasNeverRendered = true;
+    private bool hasCalledOnAfterRender;
+
     internal bool IsRenderingQueued { get; private set; } = false;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected RendererInfo RendererInfo => renderHandle.RendererInfo;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected ResourceAssetCollection Assets => renderHandle.Assets;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected IComponentRenderMode? AssignedRenderMode
+    {
+        get
+        {
+            if (!renderMode.cached)
+                renderMode = (renderHandle.RenderMode, true);
+
+            return renderMode.mode;
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected bool PreserveDefaultRenderingBehavior { get; set; } = false;
 
     /// <summary>
     /// Instantiate a new lighthouse base component
@@ -35,6 +70,9 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     /// <param name="renderHandle">Render handle to attach component to</param>
     public void Attach(RenderHandle renderHandle)
     {
+        if (renderHandle.IsInitialized)
+            throw new InvalidOperationException($"The render handle is already set. Cannot initialize a {nameof(ComponentBase)} more than once.");
+
         this.renderHandle = renderHandle;
     }
 
@@ -46,10 +84,13 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     public Task SetParametersAsync(ParameterView parameters)
     {
         parameters.SetParameterProperties(this);
-        if (HaveParamtersChanged(parameters))
-            StateHasChanged();
+        if (!initialized)
+        {
+            initialized = true;
+            return RunInitAndSetParametersAsync(parameters);
+        }
 
-        return Task.CompletedTask;
+        return CallOnParametersSetAsync(parameters);
     }
 
     /// <summary>
@@ -72,6 +113,26 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="workItem"></param>
+    /// <returns></returns>
+    protected Task InvokeAsync(Func<Task> workItem)
+    {
+        return renderHandle.Dispatcher.InvokeAsync(workItem);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="exception"></param>
+    /// <returns></returns>
+    protected Task DispatchExceptionAsync(Exception exception)
+    {
+        return renderHandle.DispatchExceptionAsync(exception);
+    }
+
+    /// <summary>
     /// Re-render the component
     /// </summary>
     protected void StateHasChanged()
@@ -82,11 +143,74 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
         QueueRendering();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="firstRender"></param>
+    protected virtual void OnAfterRender(bool firstRender)
+    {
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="firstRender"></param>
+    /// <returns></returns>
+    protected virtual Task OnAfterRenderAsync(bool firstRender)
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected virtual void OnInitialized()
+    {
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    protected virtual Task OnInitializedAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected virtual void OnParametersSet()
+    {
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    protected virtual Task OnParametersSetAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    protected virtual bool ShouldRender()
+    {
+        return true;
+    }
+
     private void TrackAndBuildRenderTree(RenderTreeBuilder builder)
     {
         accessTracker.Track(() =>
         {
             IsRenderingQueued = false;
+            hasNeverRendered = false;
             BuildRenderTree(builder);
         });
     }
@@ -133,8 +257,11 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
 
     private bool SetRenderingQueuedSync()
     {
-        if (IsRenderingQueued)
+        if (IsRenderingQueued 
+            || (!hasNeverRendered && !ShouldRender() && !renderHandle.IsRenderingOnMetadataUpdate))
+        {
             return false;
+        }
 
         IsRenderingQueued = true;
         return true;
@@ -143,6 +270,91 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     private void QueueRendering()
     {
         renderHandle.Render(renderFragment);
+    }
+
+    [DebuggerDisableUserUnhandledExceptions]
+    private async Task RunInitAndSetParametersAsync(ParameterView parameters)
+    {
+        Task task;
+
+        try
+        {
+            OnInitialized();
+            task = OnInitializedAsync();
+        }
+        catch (Exception ex) when (ex is not NavigationException)
+        {
+            Debugger.BreakForUserUnhandledException(ex);
+            throw;
+        }
+
+        if (task.Status != TaskStatus.RanToCompletion && task.Status != TaskStatus.Canceled)
+        {
+            if (PreserveDefaultRenderingBehavior || HaveParamtersChanged(parameters))
+                StateHasChanged();
+
+            try
+            {
+                await task;
+            }
+            catch
+            {
+                if (!task.IsCanceled)
+                {
+                    throw;
+                }
+            }
+        }
+
+        await CallOnParametersSetAsync(parameters);
+    }
+
+    [DebuggerDisableUserUnhandledExceptions]
+    private Task CallOnParametersSetAsync(ParameterView parameters)
+    {
+        Task task;
+
+        try
+        {
+            OnParametersSet();
+            task = OnParametersSetAsync();
+        }
+        catch (Exception ex) when (ex is not NavigationException)
+        {
+            Debugger.BreakForUserUnhandledException(ex);
+            throw;
+        }
+
+        var shouldAwaitTask = task.Status != TaskStatus.RanToCompletion &&
+            task.Status != TaskStatus.Canceled;
+
+        if (PreserveDefaultRenderingBehavior || HaveParamtersChanged(parameters))
+            StateHasChanged();
+
+        return shouldAwaitTask
+            ? CallStateHasChangedOnAsyncCompletion(task, PreserveDefaultRenderingBehavior || HaveParamtersChanged(parameters)) 
+            : Task.CompletedTask;
+    }
+
+    [DebuggerDisableUserUnhandledExceptions]
+    private async Task CallStateHasChangedOnAsyncCompletion(Task task, bool runStateHasChanged)
+    {
+        try
+        {
+            await task;
+        }
+        catch 
+        {
+            if (task.IsCanceled)
+            {
+                return;
+            }
+
+            throw;
+        }
+
+        if (runStateHasChanged)
+            StateHasChanged();
     }
 
     void IRefreshable.Refresh()
@@ -156,5 +368,28 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     void IRefreshable.Dispose(AbstractSignal signal)
     {
         accessTracker.Untrack(signal);
+    }
+
+    Task IHandleEvent.HandleEventAsync(EventCallbackWorkItem callback, object? arg)
+    {
+        var task = callback.InvokeAsync(arg);
+        var shouldAwaitTask = task.Status != TaskStatus.RanToCompletion &&
+            task.Status != TaskStatus.Canceled;
+
+        StateHasChanged();
+
+        return shouldAwaitTask 
+            ? CallStateHasChangedOnAsyncCompletion(task, PreserveDefaultRenderingBehavior) 
+            : Task.CompletedTask;
+    }
+
+    Task IHandleAfterRender.OnAfterRenderAsync()
+    {
+        var firstRender = !hasCalledOnAfterRender;
+        hasCalledOnAfterRender = true;
+
+        OnAfterRender(firstRender);
+
+        return OnAfterRenderAsync(firstRender);
     }
 }
