@@ -13,8 +13,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
 {
     private readonly RenderFragment renderFragment;
     private readonly AccessTracker accessTracker;
-    private readonly Lock parametersChangedLockObject = new();
-    private readonly Lock renderingQueueLockObject = new();
+    private readonly Lock lockObject = new();
 
     private RenderHandle renderHandle;
     private (IComponentRenderMode? mode, bool cached) renderMode;
@@ -84,22 +83,27 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     public Task SetParametersAsync(ParameterView parameters)
     {
         parameters.SetParameterProperties(this);
+        var callStateHasChanged = PreserveDefaultRenderingBehavior 
+            || HaveParamtersChanged(parameters);
+
         if (!initialized)
         {
             initialized = true;
-            return RunInitAndSetParametersAsync(parameters);
+            return RunInitAndSetParametersAsync(callStateHasChanged);
         }
 
-        return CallOnParametersSetAsync(parameters);
+        return CallOnParametersSetAsync(callStateHasChanged);
     }
 
     /// <summary>
-    /// Build the render tree
+    /// Re-render the component
     /// </summary>
-    /// <param name="builder">Builder provided by the renderer</param>
-    protected virtual void BuildRenderTree(RenderTreeBuilder builder)
+    protected void StateHasChanged()
     {
+        if (!SetRenderingQueued())
+            return;
 
+        QueueRendering();
     }
 
     /// <summary>
@@ -133,33 +137,12 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     }
 
     /// <summary>
-    /// Re-render the component
+    /// Build the render tree
     /// </summary>
-    protected void StateHasChanged()
-    {
-        if (!SetRenderingQueued())
-            return;
-
-        QueueRendering();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="firstRender"></param>
-    protected virtual void OnAfterRender(bool firstRender)
+    /// <param name="builder">Builder provided by the renderer</param>
+    protected virtual void BuildRenderTree(RenderTreeBuilder builder)
     {
 
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="firstRender"></param>
-    /// <returns></returns>
-    protected virtual Task OnAfterRenderAsync(bool firstRender)
-    {
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -199,6 +182,25 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="firstRender"></param>
+    protected virtual void OnAfterRender(bool firstRender)
+    {
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="firstRender"></param>
+    /// <returns></returns>
+    protected virtual Task OnAfterRenderAsync(bool firstRender)
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
     /// <returns></returns>
     protected virtual bool ShouldRender()
     {
@@ -216,14 +218,6 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     }
 
     private bool HaveParamtersChanged(ParameterView parameters)
-    {
-        lock (parametersChangedLockObject)
-        {
-            return HaveParametersChangedSync(parameters);
-        }
-    }
-
-    private bool HaveParametersChangedSync(ParameterView parameters)
     {
         var oldParamters = this.parameters;
         this.parameters = parameters.ToDictionary();
@@ -247,33 +241,9 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
         return abstractSignal != value;
     }
 
-    private bool SetRenderingQueued()
-    {
-        lock (renderingQueueLockObject)
-        {
-            return SetRenderingQueuedSync();
-        }
-    }
-
-    private bool SetRenderingQueuedSync()
-    {
-        if (IsRenderingQueued 
-            || (!hasNeverRendered && !ShouldRender() && !renderHandle.IsRenderingOnMetadataUpdate))
-        {
-            return false;
-        }
-
-        IsRenderingQueued = true;
-        return true;
-    }
-
-    private void QueueRendering()
-    {
-        renderHandle.Render(renderFragment);
-    }
-
+    //TODO
     [DebuggerDisableUserUnhandledExceptions]
-    private async Task RunInitAndSetParametersAsync(ParameterView parameters)
+    private async Task RunInitAndSetParametersAsync(bool parameters)
     {
         Task task;
 
@@ -290,7 +260,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
 
         if (task.Status != TaskStatus.RanToCompletion && task.Status != TaskStatus.Canceled)
         {
-            if (PreserveDefaultRenderingBehavior || HaveParamtersChanged(parameters))
+            if (parameters)
                 StateHasChanged();
 
             try
@@ -309,8 +279,9 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
         await CallOnParametersSetAsync(parameters);
     }
 
+    //TODO
     [DebuggerDisableUserUnhandledExceptions]
-    private Task CallOnParametersSetAsync(ParameterView parameters)
+    private Task CallOnParametersSetAsync(bool parameters)
     {
         Task task;
 
@@ -328,16 +299,17 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
         var shouldAwaitTask = task.Status != TaskStatus.RanToCompletion &&
             task.Status != TaskStatus.Canceled;
 
-        if (PreserveDefaultRenderingBehavior || HaveParamtersChanged(parameters))
+        if (parameters)
             StateHasChanged();
 
         return shouldAwaitTask
-            ? CallStateHasChangedOnAsyncCompletion(task, PreserveDefaultRenderingBehavior || HaveParamtersChanged(parameters)) 
+            ? CallStateHasChangedOnAsyncCompletion(task, parameters) 
             : Task.CompletedTask;
     }
 
+    //TODO
     [DebuggerDisableUserUnhandledExceptions]
-    private async Task CallStateHasChangedOnAsyncCompletion(Task task, bool runStateHasChanged)
+    private async Task CallStateHasChangedOnAsyncCompletion(Task task, bool callStateHasChanged)
     {
         try
         {
@@ -353,8 +325,39 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
             throw;
         }
 
-        if (runStateHasChanged)
+        if (callStateHasChanged)
             StateHasChanged();
+    }
+
+    private bool SetRenderingQueued()
+    {
+        lock (lockObject)
+        {
+            return SetRenderingQueuedSync();
+        }
+    }
+
+    private bool SetRenderingQueuedSync()
+    {
+        if (IsRenderingQueued || !IsRenderingNecessary())
+        {
+            return false;
+        }
+
+        IsRenderingQueued = true;
+        return true;
+    }
+
+    private bool IsRenderingNecessary()
+    {
+        return hasNeverRendered
+            || ShouldRender()
+            || renderHandle.IsRenderingOnMetadataUpdate;
+    }
+
+    private void QueueRendering()
+    {
+        renderHandle.Render(renderFragment);
     }
 
     void IRefreshable.Refresh()
@@ -370,6 +373,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
         accessTracker.Untrack(signal);
     }
 
+    //TODO
     Task IHandleEvent.HandleEventAsync(EventCallbackWorkItem callback, object? arg)
     {
         var task = callback.InvokeAsync(arg);
@@ -389,7 +393,6 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
         hasCalledOnAfterRender = true;
 
         OnAfterRender(firstRender);
-
         return OnAfterRenderAsync(firstRender);
     }
 }
