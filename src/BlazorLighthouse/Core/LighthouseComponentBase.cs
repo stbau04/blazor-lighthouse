@@ -9,11 +9,11 @@ namespace BlazorLighthouse.Core;
 /// <summary>
 /// Base for Blazor components that should subscribe to signal value changes 
 /// </summary>
-public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshable, IHandleAfterRender, IHandleEvent
+public class LighthouseComponentBase 
+    : SignalingContext, IComponent, IRefreshable, IHandleAfterRender, IHandleEvent
 {
     private readonly RenderFragment renderFragment;
     private readonly AccessTracker accessTracker;
-    private readonly Lock lockObject = new();
 
     private RenderHandle renderHandle;
     private (IComponentRenderMode? mode, bool cached) renderMode;
@@ -21,9 +21,8 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
 
     private bool initialized;
     private bool hasNeverRendered = true;
+    private bool hasPendingQueuedRender;
     private bool hasCalledOnAfterRender;
-
-    internal bool IsRenderingQueued { get; private set; } = false;
 
     /// <summary>
     /// 
@@ -95,15 +94,32 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
         return CallOnParametersSetAsync(callStateHasChanged);
     }
 
+    //TODO
     /// <summary>
     /// Re-render the component
     /// </summary>
     protected void StateHasChanged()
     {
-        if (!SetRenderingQueued())
+        if (hasPendingQueuedRender)
             return;
 
-        QueueRendering();
+        if (!hasNeverRendered 
+            && !ShouldRender() 
+            && !renderHandle.IsRenderingOnMetadataUpdate)
+        {
+            return;
+        }
+
+        try
+        {
+            hasPendingQueuedRender = true;
+            renderHandle.Render(renderFragment);
+        }
+        catch
+        {
+            hasPendingQueuedRender = false;
+            throw;
+        }
     }
 
     /// <summary>
@@ -211,7 +227,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
     {
         accessTracker.Track(() =>
         {
-            IsRenderingQueued = false;
+            hasPendingQueuedRender = false;
             hasNeverRendered = false;
             BuildRenderTree(builder);
         });
@@ -329,32 +345,6 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
             StateHasChanged();
     }
 
-    private bool SetRenderingQueued()
-    {
-        lock (lockObject)
-        {
-            return SetRenderingQueuedSync();
-        }
-    }
-
-    private bool SetRenderingQueuedSync()
-    {
-        if (IsRenderingQueued || !IsRenderingNecessary())
-        {
-            return false;
-        }
-
-        IsRenderingQueued = true;
-        return true;
-    }
-
-    private bool IsRenderingNecessary()
-    {
-        return hasNeverRendered
-            || ShouldRender()
-            || renderHandle.IsRenderingOnMetadataUpdate;
-    }
-
     private void QueueRendering()
     {
         renderHandle.Render(renderFragment);
@@ -362,10 +352,7 @@ public class LighthouseComponentBase : SignalingContext, IComponent, IRefreshabl
 
     void IRefreshable.Refresh()
     {
-        if (!SetRenderingQueued())
-            return;
-
-        InvokeAsync(QueueRendering);
+        InvokeAsync(StateHasChanged);
     }
 
     void IRefreshable.Dispose(AbstractSignal signal)
