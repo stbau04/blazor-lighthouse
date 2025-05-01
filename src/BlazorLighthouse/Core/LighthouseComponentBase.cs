@@ -17,7 +17,6 @@ public class LighthouseComponentBase
 
     private RenderHandle renderHandle;
     private (IComponentRenderMode? mode, bool cached) renderMode;
-    private IReadOnlyDictionary<string, object?>? parameters;
 
     private bool initialized;
     private bool hasNeverRendered = true;
@@ -77,8 +76,7 @@ public class LighthouseComponentBase
     public Task SetParametersAsync(ParameterView parameters)
     {
         parameters.SetParameterProperties(this);
-        var callStateHasChanged = EnforceStateHasChanged()
-            || HaveParamtersChanged(parameters);
+        var callStateHasChanged = EnforceStateHasChanged();
 
         if (!initialized)
         {
@@ -224,30 +222,6 @@ public class LighthouseComponentBase
             hasNeverRendered = false;
             BuildRenderTree(builder);
         });
-    }
-
-    private bool HaveParamtersChanged(ParameterView parameters)
-    {
-        var previousParamters = this.parameters;
-        this.parameters = parameters.ToDictionary();
-        if (previousParamters == null)
-            return true;
-
-        return this.parameters.Any(
-            parameter => HasParameterChanged(previousParamters, parameter));
-    }
-
-    private bool HasParameterChanged(
-        IReadOnlyDictionary<string, object?> previousParamters,
-        KeyValuePair<string, object?> parameter)
-    {
-        if (parameter.Value is not AbstractSignal abstractSignal
-            || !previousParamters.TryGetValue(parameter.Key, out var value))
-        {
-            return true;
-        }
-
-        return abstractSignal != value;
     }
 
     private async Task CallInitAndSetParametersAsync(bool parameters)
