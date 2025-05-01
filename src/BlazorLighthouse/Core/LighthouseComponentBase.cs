@@ -63,7 +63,7 @@ public class LighthouseComponentBase
     /// <param name="renderHandle">Render handle to attach component to</param>
     public void Attach(RenderHandle renderHandle)
     {
-        if (renderHandle.IsInitialized)
+        if (this.renderHandle.IsInitialized)
             throw new InvalidOperationException($"Render handle is already set");
 
         this.renderHandle = renderHandle;
