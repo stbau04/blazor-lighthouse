@@ -10,7 +10,7 @@ namespace BlazorLighthouse.Core;
 /// Base for Blazor components that should subscribe to signal value changes 
 /// </summary>
 public class LighthouseComponentBase 
-    : SignalingContext, IComponent, IRefreshable, IHandleAfterRender, IHandleEvent
+    : SignalingContext, IComponent, IRefreshable, IHandleEvent, IHandleAfterRender
 {
     private readonly RenderFragment renderFragment;
     private readonly AccessTracker accessTracker;
@@ -49,11 +49,6 @@ public class LighthouseComponentBase
     }
 
     /// <summary>
-    /// 
-    /// </summary>
-    protected bool PreserveDefaultRenderingBehavior { get; set; } = false;
-
-    /// <summary>
     /// Instantiate a new lighthouse base component
     /// </summary>
     public LighthouseComponentBase()
@@ -69,7 +64,7 @@ public class LighthouseComponentBase
     public void Attach(RenderHandle renderHandle)
     {
         if (renderHandle.IsInitialized)
-            throw new InvalidOperationException($"The render handle is already set. Cannot initialize a {nameof(ComponentBase)} more than once.");
+            throw new InvalidOperationException($"Render handle is already set");
 
         this.renderHandle = renderHandle;
     }
@@ -82,19 +77,18 @@ public class LighthouseComponentBase
     public Task SetParametersAsync(ParameterView parameters)
     {
         parameters.SetParameterProperties(this);
-        var callStateHasChanged = PreserveDefaultRenderingBehavior 
+        var callStateHasChanged = EnforceStateHasChanged()
             || HaveParamtersChanged(parameters);
 
         if (!initialized)
         {
             initialized = true;
-            return RunInitAndSetParametersAsync(callStateHasChanged);
+            return CallInitAndSetParametersAsync(callStateHasChanged);
         }
 
         return CallOnParametersSetAsync(callStateHasChanged);
     }
 
-    //TODO
     /// <summary>
     /// Re-render the component
     /// </summary>
@@ -103,23 +97,14 @@ public class LighthouseComponentBase
         if (hasPendingQueuedRender)
             return;
 
-        if (!hasNeverRendered 
-            && !ShouldRender() 
+        if (!hasNeverRendered
+            && !ShouldRender()
             && !renderHandle.IsRenderingOnMetadataUpdate)
         {
             return;
         }
 
-        try
-        {
-            hasPendingQueuedRender = true;
-            renderHandle.Render(renderFragment);
-        }
-        catch
-        {
-            hasPendingQueuedRender = false;
-            throw;
-        }
+        QueueRendering();
     }
 
     /// <summary>
@@ -223,6 +208,14 @@ public class LighthouseComponentBase
         return true;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    protected virtual bool EnforceStateHasChanged() {
+        return true;
+    }
+
     private void TrackAndBuildRenderTree(RenderTreeBuilder builder)
     {
         accessTracker.Track(() =>
@@ -235,21 +228,21 @@ public class LighthouseComponentBase
 
     private bool HaveParamtersChanged(ParameterView parameters)
     {
-        var oldParamters = this.parameters;
+        var previousParamters = this.parameters;
         this.parameters = parameters.ToDictionary();
-        if (oldParamters == null)
+        if (previousParamters == null)
             return true;
 
         return this.parameters.Any(
-            parameter => HasParameterChanged(oldParamters, parameter));
+            parameter => HasParameterChanged(previousParamters, parameter));
     }
 
     private bool HasParameterChanged(
-        IReadOnlyDictionary<string, object?> oldParameters,
+        IReadOnlyDictionary<string, object?> previousParamters,
         KeyValuePair<string, object?> parameter)
     {
         if (parameter.Value is not AbstractSignal abstractSignal
-            || !oldParameters.TryGetValue(parameter.Key, out var value))
+            || !previousParamters.TryGetValue(parameter.Key, out var value))
         {
             return true;
         }
@@ -257,97 +250,120 @@ public class LighthouseComponentBase
         return abstractSignal != value;
     }
 
-    //TODO
-    [DebuggerDisableUserUnhandledExceptions]
-    private async Task RunInitAndSetParametersAsync(bool parameters)
+    private async Task CallInitAndSetParametersAsync(bool parameters)
     {
-        Task task;
-
-        try
+        var onInitTask = CallOnInitializedAsync();
+        if (!ShouldAwaitTask(onInitTask))
         {
-            OnInitialized();
-            task = OnInitializedAsync();
+            await CallOnParametersSetAsync(parameters);
+            return;
         }
-        catch (Exception ex) when (ex is not NavigationException)
-        {
-            Debugger.BreakForUserUnhandledException(ex);
-            throw;
-        }
-
-        if (task.Status != TaskStatus.RanToCompletion && task.Status != TaskStatus.Canceled)
-        {
-            if (parameters)
-                StateHasChanged();
-
-            try
-            {
-                await task;
-            }
-            catch
-            {
-                if (!task.IsCanceled)
-                {
-                    throw;
-                }
-            }
-        }
-
-        await CallOnParametersSetAsync(parameters);
-    }
-
-    //TODO
-    [DebuggerDisableUserUnhandledExceptions]
-    private Task CallOnParametersSetAsync(bool parameters)
-    {
-        Task task;
-
-        try
-        {
-            OnParametersSet();
-            task = OnParametersSetAsync();
-        }
-        catch (Exception ex) when (ex is not NavigationException)
-        {
-            Debugger.BreakForUserUnhandledException(ex);
-            throw;
-        }
-
-        var shouldAwaitTask = task.Status != TaskStatus.RanToCompletion &&
-            task.Status != TaskStatus.Canceled;
 
         if (parameters)
             StateHasChanged();
 
-        return shouldAwaitTask
-            ? CallStateHasChangedOnAsyncCompletion(task, parameters) 
-            : Task.CompletedTask;
+        await WaitForAsyncTaskCompletion(onInitTask);
+        await CallOnParametersSetAsync(parameters);
     }
 
-    //TODO
     [DebuggerDisableUserUnhandledExceptions]
+    private Task CallOnInitializedAsync()
+    {
+        try
+        {
+            OnInitialized();
+            return OnInitializedAsync();
+        }
+        catch (Exception ex) when (ex is not NavigationException)
+        {
+            Debugger.BreakForUserUnhandledException(ex);
+            throw;
+        }
+    }
+
+    private static bool ShouldAwaitTask(Task task)
+    {
+        return task.Status is not TaskStatus.RanToCompletion
+            and not TaskStatus.Canceled;
+    }
+
+    private Task CallOnParametersSetAsync(bool callStateHasChanged)
+    {
+        var onParametersSetTask = CallOnParametersSetAsync();
+        return CallStateHasChangedAfterAsyncTask(
+            onParametersSetTask,
+            callStateHasChanged);
+    }
+
+    [DebuggerDisableUserUnhandledExceptions]
+    private Task CallOnParametersSetAsync()
+    {
+        try
+        {
+            OnParametersSet();
+            return OnParametersSetAsync();
+        }
+        catch (Exception ex) when (ex is not NavigationException)
+        {
+            Debugger.BreakForUserUnhandledException(ex);
+            throw;
+        }
+    }
+
+    private Task CallStateHasChangedAfterAsyncTask(Task task, bool callStateHasChanged)
+    {
+        var shouldAwaitTask = ShouldAwaitTask(task);
+
+        if (callStateHasChanged)
+            StateHasChanged();
+
+        if (!shouldAwaitTask)
+            return Task.CompletedTask;
+
+        return CallStateHasChangedOnAsyncCompletion(task, callStateHasChanged);
+    }
+
     private async Task CallStateHasChangedOnAsyncCompletion(Task task, bool callStateHasChanged)
+    {
+        if (!await WaitForAsyncTaskCompletion(task) 
+            || !callStateHasChanged)
+        {
+            return;
+        }
+
+        StateHasChanged();
+    }
+
+    [DebuggerDisableUserUnhandledExceptions]
+    private static async Task<bool> WaitForAsyncTaskCompletion(Task task)
     {
         try
         {
             await task;
         }
-        catch 
+        catch
         {
             if (task.IsCanceled)
-            {
-                return;
-            }
+                return false;
 
             throw;
         }
 
-        if (callStateHasChanged)
-            StateHasChanged();
+        return true;
     }
 
     private void QueueRendering()
     {
-        renderHandle.Render(renderFragment);
+        try
+        {
+            hasPendingQueuedRender = true;
+            renderHandle.Render(renderFragment);
+        }
+        catch
+        {
+            hasPendingQueuedRender = false;
+            throw;
+        }
     }
 
     void IRefreshable.Refresh()
@@ -360,18 +376,11 @@ public class LighthouseComponentBase
         accessTracker.Untrack(signal);
     }
 
-    //TODO
     Task IHandleEvent.HandleEventAsync(EventCallbackWorkItem callback, object? arg)
     {
-        var task = callback.InvokeAsync(arg);
-        var shouldAwaitTask = task.Status != TaskStatus.RanToCompletion &&
-            task.Status != TaskStatus.Canceled;
-
-        StateHasChanged();
-
-        return shouldAwaitTask 
-            ? CallStateHasChangedOnAsyncCompletion(task, PreserveDefaultRenderingBehavior) 
-            : Task.CompletedTask;
+        var eventTask = callback.InvokeAsync(arg);
+        var callStateHasChanged = EnforceStateHasChanged();
+        return CallStateHasChangedAfterAsyncTask(eventTask, callStateHasChanged);
     }
 
     Task IHandleAfterRender.OnAfterRenderAsync()

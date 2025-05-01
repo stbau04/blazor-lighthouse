@@ -13,12 +13,12 @@ internal interface IRefreshable
     [ExcludeFromCodeCoverage]
     public class EmptyRefreshable : IRefreshable
     {
-        void IRefreshable.Dispose(AbstractSignal signal)
+        void IRefreshable.Refresh()
         {
 
         }
 
-        void IRefreshable.Refresh()
+        void IRefreshable.Dispose(AbstractSignal signal)
         {
 
         }
