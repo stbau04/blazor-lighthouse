@@ -480,7 +480,7 @@ public partial class LighthouseComponentBaseTest
         await taskCompletionSource2.Task;
 
         var setterTask2 = Task.Run(() => signal2.Set(5));
-        while (!component!.IsRenderingQueued)
+        while (!component!.HasPendingQueuedRender)
             ;
 
         signal3.Set(6);
